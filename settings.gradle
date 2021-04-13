@@ -1,3 +1,4 @@
+include ':pagination'
 include ':retrofit'
 include ':clipboard'
 include ':multifunctionalimageview'
