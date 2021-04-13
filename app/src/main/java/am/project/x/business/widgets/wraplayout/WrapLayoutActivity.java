@@ -18,6 +18,8 @@ package am.project.x.business.widgets.wraplayout;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 
@@ -34,6 +36,7 @@ public class WrapLayoutActivity extends BaseActivity implements RadioGroup.OnChe
         SeekBar.OnSeekBarChangeListener {
 
     private WrapLayout mVContent;
+    private View other;
 
     public WrapLayoutActivity() {
         super(R.layout.activity_wraplayout);
@@ -48,9 +51,11 @@ public class WrapLayoutActivity extends BaseActivity implements RadioGroup.OnChe
         super.onCreate(savedInstanceState);
         setSupportActionBar(R.id.wl_toolbar);
         mVContent = findViewById(R.id.wl_wl_content);
+        other = findViewById(R.id.ohter_layout);
         final RadioGroup gravity = findViewById(R.id.wl_rg_gravity);
         final SeekBar horizontal = findViewById(R.id.wl_sb_horizontal);
         final SeekBar vertical = findViewById(R.id.wl_sb_vertical);
+        final SeekBar height = findViewById(R.id.wl_sb_height);
 
         gravity.setOnCheckedChangeListener(this);
         gravity.check(R.id.wl_rb_top);
@@ -58,6 +63,8 @@ public class WrapLayoutActivity extends BaseActivity implements RadioGroup.OnChe
         horizontal.setProgress(15);
         vertical.setOnSeekBarChangeListener(this);
         vertical.setProgress(15);
+        height.setOnSeekBarChangeListener(this);
+        height.setProgress(15);
     }
 
     // Listener
@@ -86,6 +93,13 @@ public class WrapLayoutActivity extends BaseActivity implements RadioGroup.OnChe
             case R.id.wl_sb_vertical:
                 mVContent.setVerticalSpacing(
                         (int) (progress * getResources().getDisplayMetrics().density));
+                break;
+            case R.id.wl_sb_height:
+                ViewGroup.LayoutParams lp = other.getLayoutParams();
+                float p = progress * 1.0f / 100f;
+                lp.height = (int) (p * getResources().getDisplayMetrics().density * 1000);
+                other.setLayoutParams(lp);
+                other.requestLayout();
                 break;
         }
     }

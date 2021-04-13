@@ -1,114 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tool="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tool:context=".business.widgets.wraplayout.WrapLayoutActivity">
 
-    <androidx.appcompat.widget.Toolbar
-        android:id="@+id/wl_toolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
-        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-        app:title="@string/wl_label" />
-
-    <androidx.appcompat.widget.AppCompatSeekBar
-        android:id="@+id/wl_sb_vertical"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
-        android:max="30"
-        app:layout_constraintBottom_toBottomOf="parent" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="6dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:text="@string/wl_text_vertical"
-        android:textColor="#ff666666"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@id/wl_sb_vertical"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <androidx.appcompat.widget.AppCompatSeekBar
-        android:id="@+id/wl_sb_horizontal"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:max="30"
-        app:layout_constraintBottom_toTopOf="@id/wl_sb_vertical" />
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="6dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:text="@string/wl_text_horizontal"
-        android:textColor="#ff666666"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@id/wl_sb_horizontal"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <RadioGroup
-        android:id="@+id/wl_rg_gravity"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:orientation="horizontal"
-        app:layout_constraintBottom_toTopOf="@id/wl_sb_horizontal">
-
-        <androidx.appcompat.widget.AppCompatRadioButton
-            android:id="@+id/wl_rb_top"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/wl_gravity_top" />
-
-        <androidx.appcompat.widget.AppCompatRadioButton
-            android:id="@+id/wl_rb_center"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/wl_gravity_center" />
-
-        <androidx.appcompat.widget.AppCompatRadioButton
-            android:id="@+id/wl_rb_bottom"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/wl_gravity_bottom" />
-
-    </RadioGroup>
-
-    <androidx.appcompat.widget.AppCompatTextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="6dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginRight="10dp"
-        android:text="@string/wl_text_gravity"
-        android:textColor="#ff666666"
-        android:textSize="14sp"
-        app:layout_constraintBottom_toTopOf="@id/wl_rg_gravity"
-        app:layout_constraintStart_toStartOf="parent" />
-
-
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="32dp"
         app:layout_constraintBottom_toTopOf="@id/wl_rg_gravity"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:orientation="vertical"
         app:layout_constraintTop_toBottomOf="@id/wl_toolbar">
+
+        <FrameLayout
+            android:id="@+id/ohter_layout"
+            android:layout_width="match_parent"
+            android:background="@android:color/darker_gray"
+            android:layout_height="100dp"></FrameLayout>
 
         <am.widget.wraplayout.WrapLayout
             android:id="@+id/wl_wl_content"
@@ -241,6 +154,110 @@
 
         </am.widget.wraplayout.WrapLayout>
 
-    </ScrollView>
+    </LinearLayout>
+
+    <RadioGroup
+        android:id="@+id/wl_rg_gravity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@id/wl_sb_horizontal">
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/wl_rb_top"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/wl_gravity_top" />
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/wl_rb_center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/wl_gravity_center" />
+
+        <androidx.appcompat.widget.AppCompatRadioButton
+            android:id="@+id/wl_rb_bottom"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/wl_gravity_bottom" />
+
+    </RadioGroup>
+
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/wl_sb_height"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="40dp"
+        android:max="30"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/wl_sb_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="40dp"
+        android:max="30"
+        app:layout_constraintBottom_toBottomOf="@id/wl_sb_height" />
+
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/wl_sb_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:max="30"
+        app:layout_constraintBottom_toTopOf="@id/wl_sb_vertical" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="@string/wl_text_vertical"
+        android:textColor="#ff666666"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@id/wl_sb_vertical"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="@string/wl_text_gravity"
+        android:textColor="#ff666666"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@id/wl_rg_gravity"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="6dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="@string/wl_text_horizontal"
+        android:textColor="#ff666666"
+        android:textSize="14sp"
+        app:layout_constraintBottom_toTopOf="@id/wl_sb_horizontal"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/wl_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
+        app:title="@string/wl_label" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
