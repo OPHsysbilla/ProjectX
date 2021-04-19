@@ -1,4 +1,6 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion 30
@@ -6,9 +8,9 @@ android {
 
     defaultConfig {
         //noinspection MinSdkTooLow
-        minSdkVersion 4
+        minSdkVersion 5
         targetSdkVersion 30
-        versionCode 4
+        versionCode 5
         versionName "1.2.1"
     }
 
