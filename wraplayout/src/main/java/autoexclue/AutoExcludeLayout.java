@@ -1,20 +1,4 @@
-/*
- * Copyright (C) 2015 AlexMofer
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-package am.widget.wraplayout;
+package autoexclue;
 
 import android.annotation.TargetApi;
 import android.content.Context;
@@ -25,11 +9,13 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 
+import am.widget.wraplayout.R;
+
 /**
- * 自动换行布局
+ * Created by lei.jialin on 2021/4/19
  */
-@SuppressWarnings("unused")
-public class WrapLayout extends ViewGroup {
+public class AutoExcludeLayout extends ViewGroup {
+    AutoDataAdapter adapter;
 
     public static final int GRAVITY_PARENT = -1;// 使用全局对齐方案
     public static final int GRAVITY_TOP = 0;// 子项顶部对齐
@@ -40,27 +26,29 @@ public class WrapLayout extends ViewGroup {
     private int mVerticalSpacing = 0;
     private int mHorizontalSpacing = 0;
     private int mNumRows = 0;
+    private int mNumLayoutRows = 0;
     private ArrayList<Integer> mNumColumns = new ArrayList<>();
     private ArrayList<Integer> mChildMaxWidth = new ArrayList<>();
+    private ArrayList<Integer> mChildTop = new ArrayList<>();
     private int mGravity = GRAVITY_TOP;
 
-    public WrapLayout(Context context) {
+    public AutoExcludeLayout(Context context) {
         super(context);
         initView(context, null, 0);
     }
 
-    public WrapLayout(Context context, AttributeSet attrs) {
+    public AutoExcludeLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         initView(context, attrs, 0);
     }
 
-    public WrapLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+    public AutoExcludeLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initView(context, attrs, defStyleAttr);
     }
 
     @TargetApi(21)
-    public WrapLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    public AutoExcludeLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         initView(context, attrs, defStyleAttr);
     }
@@ -82,12 +70,12 @@ public class WrapLayout extends ViewGroup {
             }
         }
         a.recycle();
-        TypedArray custom = context.obtainStyledAttributes(attrs, R.styleable.WrapLayout);
+        TypedArray custom = context.obtainStyledAttributes(attrs, R.styleable.AutoExcludeLayout);
         horizontalSpacing = custom.getDimensionPixelSize(
-                R.styleable.WrapLayout_wlyHorizontalSpacing, horizontalSpacing);
+                R.styleable.AutoExcludeLayout_AEL_HorizontalSpacing, horizontalSpacing);
         verticalSpacing = custom.getDimensionPixelSize(
-                R.styleable.WrapLayout_wlyVerticalSpacing, verticalSpacing);
-        int gravity = custom.getInt(R.styleable.WrapLayout_wlyGravity, GRAVITY_TOP);
+                R.styleable.AutoExcludeLayout_AEL_VerticalSpacing, verticalSpacing);
+        int gravity = custom.getInt(R.styleable.AutoExcludeLayout_AEL_Gravity, GRAVITY_TOP);
         custom.recycle();
         mHorizontalSpacing = horizontalSpacing;
         mVerticalSpacing = verticalSpacing;
@@ -126,105 +114,109 @@ public class WrapLayout extends ViewGroup {
 
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        final int paddingStart = Compat.getPaddingStart(this);
-        final int paddingEnd = Compat.getPaddingEnd(this);
+        final int paddingStart = getPaddingLeft();
+        final int paddingEnd = getPaddingRight();
         final int paddingTop = getPaddingTop();
         final int paddingBottom = getPaddingBottom();
         final int suggestedMinimumWidth = getSuggestedMinimumWidth();
         final int suggestedMinimumHeight = getSuggestedMinimumHeight();
         final int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         final int widthSize = MeasureSpec.getSize(widthMeasureSpec);
+        final int heightMode = MeasureSpec.getSize(heightMeasureSpec);
+        final int heightSize = MeasureSpec.getSize(heightMeasureSpec);
         int itemsWidth = 0;
         int itemsHeight = 0;
+        int oldNumRows = mNumRows;
         mNumRows = 0;
         mNumColumns.clear();
         mChildMaxWidth.clear();
         if (getChildCount() > 0) {
-            if (widthMode == MeasureSpec.UNSPECIFIED) {
-                int numColumns = 0;
-                for (int index = 0; index < getChildCount(); index++) {
-                    View child = getChildAt(index);
-                    if (child.getVisibility() == View.GONE) {
-                        continue;
-                    }
-                    if (mNumRows == 0)
-                        mNumRows = 1;
-                    measureChild(child, widthMeasureSpec, heightMeasureSpec);
-                    final int childWidth = child.getMeasuredWidth();
-                    final int childHeight = child.getMeasuredHeight();
-                    if (numColumns == 0) {
-                        itemsWidth = -mHorizontalSpacing;
-                    }
-                    itemsWidth += mHorizontalSpacing + childWidth;
-                    itemsHeight = Math.max(childHeight, itemsHeight);
-                    numColumns++;
-                }
-                if (numColumns != 0) {
-                    mNumColumns.add(numColumns);
-                    mChildMaxWidth.add(itemsHeight);
-                }
+            if (heightMode == MeasureSpec.UNSPECIFIED) {
+                // TODO: empty implement
             } else {
                 int numColumns = 0;
-                final int maxItemsWidth = widthSize - paddingStart - paddingEnd;
+//                final int maxItemsWidth = widthSize - paddingStart - paddingEnd;
+                final int maxItemsHeight = heightSize - paddingTop - paddingBottom;
                 int rowWidth = 0;
                 int rowHeight = 0;
                 for (int index = 0; index < getChildCount(); index++) {
                     View child = getChildAt(index);
+                    LayoutParams lp = (LayoutParams) child.getLayoutParams();
                     if (child.getVisibility() == View.GONE) {
+                        lp.isWithinValidLayout = false;
+                        lp.isInvisibleOutValidLayout = false;
                         continue;
                     }
-                    if (mNumRows == 0)
-                        mNumRows = 1;
+//                    if (mNumRows == 0) mNumRows = 1;
                     measureChild(child, widthMeasureSpec, heightMeasureSpec);
                     final int childWidth = child.getMeasuredWidth();
                     final int childHeight = child.getMeasuredHeight();
-                    if (numColumns == 0) {
-                        rowWidth = -mHorizontalSpacing;
-                    }
-                    if (rowWidth + childWidth + mHorizontalSpacing <= maxItemsWidth) {
-                        rowWidth += childWidth + mHorizontalSpacing;
-                        rowHeight = Math.max(childHeight, rowHeight);
-                        numColumns++;
+                    if(rowHeight + childHeight + mVerticalSpacing <= maxItemsHeight) {
+                        rowHeight += childHeight + mVerticalSpacing;
+                        mChildTop.add(rowHeight);
+                        mNumRows ++;
+                        mChildMaxWidth.add(childHeight + mVerticalSpacing);
+                        lp.isWithinValidLayout = true;
+                        lp.isInvisibleOutValidLayout = false;
+                        // TODO: refect
+                        itemsHeight  += mNumRows == 1 ? rowHeight : mVerticalSpacing + rowHeight;
                     } else {
-                        itemsWidth = Math.max(rowWidth, itemsWidth);
-                        itemsHeight += mNumRows == 1 ? rowHeight : mVerticalSpacing + rowHeight;
-                        mNumColumns.add(numColumns);
-                        mChildMaxWidth.add(rowHeight);
-                        mNumRows++;
-                        rowWidth = 0;
-                        rowHeight = 0;
-                        numColumns = 0;
-                        rowWidth += childWidth;
-                        rowHeight = Math.max(childHeight, rowHeight);
-                        numColumns++;
+                        mChildMaxWidth.add(childHeight + mVerticalSpacing);
+                        lp.isWithinValidLayout = false;
+                        lp.isInvisibleOutValidLayout = false;
                     }
+//                    if (numColumns == 0) {
+//                        rowWidth = -mHorizontalSpacing;
+//                    }
+//                    if (rowWidth + childWidth + mHorizontalSpacing <= maxItemsWidth) {
+//                        rowWidth += childWidth + mHorizontalSpacing;
+//                        rowHeight = Math.max(childHeight, rowHeight);
+//                        numColumns++;
+//                    } else {
+//                        itemsWidth = Math.max(rowWidth, itemsWidth);
+//                        itemsHeight += mNumRows == 1 ? rowHeight : mVerticalSpacing + rowHeight;
+//                        mNumColumns.add(numColumns);
+//                        mChildMaxWidth.add(rowHeight);
+//                        mNumRows++;
+//                        rowWidth = 0;
+//                        rowHeight = 0;
+//                        numColumns = 0;
+//                        rowWidth += childWidth;
+//                        rowHeight = Math.max(childHeight, rowHeight);
+//                        numColumns++;
+//                    }
                 }
-                if (numColumns != 0) {
-                    itemsHeight += mNumRows == 1 ? rowHeight : mVerticalSpacing + rowHeight;
-                    mNumColumns.add(numColumns);
-                    mChildMaxWidth.add(rowHeight);
-                }
+//                if (numColumns != 0) {
+//                    itemsHeight += mNumRows == 1 ? rowHeight : mVerticalSpacing + rowHeight;
+//                    mNumColumns.add(numColumns);
+//                    mChildMaxWidth.add(rowHeight);
+//                }
             }
         }
         itemsWidth = Math.max(paddingStart + itemsWidth + paddingEnd, suggestedMinimumWidth);
+
         itemsHeight = Math.max(paddingTop + itemsHeight + paddingBottom, suggestedMinimumHeight);
         setMeasuredDimension(resolveSize(itemsWidth, widthMeasureSpec),
                 resolveSize(itemsHeight, heightMeasureSpec));
+        if(mNumRows!=oldNumRows) forceLayout();
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
-        final int paddingStart = Compat.getPaddingStart(this);
+        final int paddingStart = getPaddingLeft();
         final int paddingTop = getPaddingTop();
         final int gravity = mGravity;
         int numChild = 0;
         int columnTop = paddingTop - mVerticalSpacing;
-        for (int row = 0; row < mNumRows; row++) {
-            int numColumn = mNumColumns.get(row);
+        int size = getChildCount();
+        for (int row = 0; row < size; row++) {
+            int numColumn = 1; //mNumColumns.get(row);
             int childMaxHeight = mChildMaxWidth.get(row);
-            int startX = paddingStart - mHorizontalSpacing;
+            int startX = 0;//paddingStart - mHorizontalSpacing;
             for (int index = 0; index < numColumn; ) {
                 View childView = getChildAt(numChild);
+                LayoutParams lp = (LayoutParams) childView.getLayoutParams();
+
                 numChild++;
                 if (childView == null || childView.getVisibility() == View.GONE) {
                     continue;
@@ -234,8 +226,8 @@ public class WrapLayout extends ViewGroup {
                 final LayoutParams layoutParams = (LayoutParams) childView.getLayoutParams();
                 final int childGravity = layoutParams.getGravity();
 
-                startX += mHorizontalSpacing;
-                int topOffset;
+//                startX += mHorizontalSpacing;
+                int topOffset = 0;
                 switch (childGravity) {
                     default:
                     case GRAVITY_PARENT: {
@@ -264,9 +256,22 @@ public class WrapLayout extends ViewGroup {
                         break;
                 }
                 int startY = columnTop + mVerticalSpacing + topOffset;
-                childView.layout(startX, startY, startX + childWidth, startY + childHeight);
-                startX += childWidth;
+//                childView.layout(startX, startY, startX + childWidth, startY + childHeight);
+
+//                startX += childWidth;
                 index++;
+//                if(!lp.isWithinValidLayout) continue;
+                if(startY + childHeight > getMeasuredHeight()) {
+                    mNumLayoutRows = index;
+                    lp.isInvisibleOutValidLayout = true;
+                    childView.setVisibility(View.INVISIBLE);
+                } else {
+                    childView.layout(startX, startY, startX + childWidth, startY + childHeight);
+                    if (childView.getVisibility() == View.INVISIBLE) {
+                        lp.isInvisibleOutValidLayout = false;
+                        childView.setVisibility(View.VISIBLE);
+                    }
+                }
             }
             columnTop += mVerticalSpacing + childMaxHeight;
         }
@@ -277,7 +282,6 @@ public class WrapLayout extends ViewGroup {
      *
      * @return 水平间距
      */
-    @SuppressWarnings("unused")
     public int getHorizontalSpacing() {
         return mHorizontalSpacing;
     }
@@ -287,7 +291,6 @@ public class WrapLayout extends ViewGroup {
      *
      * @param pixelSize 水平间距
      */
-    @SuppressWarnings("unused")
     public void setHorizontalSpacing(int pixelSize) {
         mHorizontalSpacing = pixelSize;
         requestLayout();
@@ -298,7 +301,6 @@ public class WrapLayout extends ViewGroup {
      *
      * @return 垂直间距
      */
-    @SuppressWarnings("unused")
     public int getVerticalSpacing() {
         return mVerticalSpacing;
     }
@@ -308,7 +310,6 @@ public class WrapLayout extends ViewGroup {
      *
      * @param pixelSize 垂直间距
      */
-    @SuppressWarnings("unused")
     public void setVerticalSpacing(int pixelSize) {
         mVerticalSpacing = pixelSize;
         requestLayout();
@@ -319,7 +320,6 @@ public class WrapLayout extends ViewGroup {
      *
      * @return 行数目
      */
-    @SuppressWarnings("unused")
     public int getNumRows() {
         return mNumRows;
     }
@@ -330,7 +330,6 @@ public class WrapLayout extends ViewGroup {
      * @param index 行号
      * @return 列数目
      */
-    @SuppressWarnings("unused")
     public int getNumColumns(int index) {
         int numColumns = -1;
         if (index < 0 || index >= mNumColumns.size()) {
@@ -344,7 +343,6 @@ public class WrapLayout extends ViewGroup {
      *
      * @return 对齐模式
      */
-    @SuppressWarnings("unused")
     public int getGravity() {
         return mGravity;
     }
@@ -354,7 +352,6 @@ public class WrapLayout extends ViewGroup {
      *
      * @param gravity 对齐模式
      */
-    @SuppressWarnings("unused")
     public void setGravity(int gravity) {
         if (gravity != GRAVITY_TOP && gravity != GRAVITY_CENTER && gravity != GRAVITY_BOTTOM)
             return;
@@ -363,18 +360,20 @@ public class WrapLayout extends ViewGroup {
     }
 
     /**
-     * Per-child layout information associated with WrapLayout.
+     * Per-child layout information associated with AutoExcludeLayout.
      */
     @SuppressWarnings("WeakerAccess")
-    public static class LayoutParams extends ViewGroup.LayoutParams {
+    public static class LayoutParams extends ViewGroup.MarginLayoutParams {
 
-        private int mGravity = WrapLayout.GRAVITY_PARENT;
+        private int mGravity = AutoExcludeLayout.GRAVITY_PARENT;
+        private boolean isWithinValidLayout;
+        private boolean isInvisibleOutValidLayout;
 
         public LayoutParams(Context c, AttributeSet attrs) {
             super(c, attrs);
-            int gravity = WrapLayout.GRAVITY_PARENT;
-            TypedArray custom = c.obtainStyledAttributes(attrs, R.styleable.WrapLayout_Layout);
-            gravity = custom.getInt(R.styleable.WrapLayout_Layout_wlyLayout_gravity, gravity);
+            int gravity = AutoExcludeLayout.GRAVITY_PARENT;
+            TypedArray custom = c.obtainStyledAttributes(attrs, R.styleable.AutoExcludeLayout_Layout);
+            gravity = custom.getInt(R.styleable.AutoExcludeLayout_Layout_AEL_Layout_gravity, gravity);
             custom.recycle();
             mGravity = gravity;
         }
@@ -411,4 +410,3 @@ public class WrapLayout extends ViewGroup {
         }
     }
 }
-

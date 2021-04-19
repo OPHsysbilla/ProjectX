@@ -16,4 +16,20 @@
             <enum name="bottom" value="2" />
         </attr>
     </declare-styleable>
+    <declare-styleable name="AutoExcludeLayout">
+        <attr name="AEL_HorizontalSpacing" format="dimension" />
+        <attr name="AEL_VerticalSpacing" format="dimension" />
+        <attr name="AEL_Gravity" format="enum">
+            <enum name="top" value="0" />
+            <enum name="center" value="1" />
+            <enum name="bottom" value="2" />
+        </attr>
+    </declare-styleable>
+    <declare-styleable name="AutoExcludeLayout_Layout">
+        <attr name="AEL_Layout_gravity" format="enum">
+            <enum name="top" value="0" />
+            <enum name="center" value="1" />
+            <enum name="bottom" value="2" />
+        </attr>
+    </declare-styleable>
 </resources>
