@@ -23,7 +23,7 @@
             android:background="@android:color/darker_gray"
             android:layout_height="100dp"></FrameLayout>
 
-        <am.widget.wraplayout.WrapLayout
+        <autoexclue.AutoExcludeLayout
             android:id="@+id/wl_wl_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -32,127 +32,7 @@
             android:horizontalSpacing="10dp"
             android:padding="10dp"
             android:verticalSpacing="10dp"
-            app:wlyGravity="top">
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:minWidth="72dp"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:minWidth="86dp"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white"
-                app:wlyLayout_gravity="center" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:minHeight="64dp"
-                android:minWidth="142dp"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:minHeight="64dp"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:minHeight="64dp"
-                android:minWidth="108dp"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:minWidth="96dp"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:minWidth="96dp"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-            <androidx.appcompat.widget.AppCompatTextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:background="@color/colorRipple"
-                android:gravity="center"
-                android:padding="10dp"
-                android:text="@string/wl_text"
-                android:textColor="@android:color/white" />
-
-        </am.widget.wraplayout.WrapLayout>
+            app:wlyGravity="top"/>
 
     </LinearLayout>
 

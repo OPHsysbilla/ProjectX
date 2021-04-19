@@ -4,18 +4,23 @@ import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.util.AttributeSet;
+import android.util.SparseArray;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import am.widget.wraplayout.R;
+import androidx.annotation.NonNull;
 
 /**
  * Created by lei.jialin on 2021/4/19
  */
 public class AutoExcludeLayout extends ViewGroup {
-    AutoDataAdapter adapter;
+    private static final int MAX_PER_MEASURE_CNT = 10;
+    Adapter adapter;
 
     public static final int GRAVITY_PARENT = -1;// 使用全局对齐方案
     public static final int GRAVITY_TOP = 0;// 子项顶部对齐
@@ -29,8 +34,11 @@ public class AutoExcludeLayout extends ViewGroup {
     private int mNumLayoutRows = 0;
     private ArrayList<Integer> mNumColumns = new ArrayList<>();
     private ArrayList<Integer> mChildMaxWidth = new ArrayList<>();
-    private ArrayList<Integer> mChildTop = new ArrayList<>();
     private int mGravity = GRAVITY_TOP;
+    private boolean mIsAttachToWindow;
+    private boolean mAdapterUpdateDuringMeasure;
+    private MtObserver mObserver = new MtObserver();
+    private boolean isLayouting;
 
     public AutoExcludeLayout(Context context) {
         super(context);
@@ -113,58 +121,134 @@ public class AutoExcludeLayout extends ViewGroup {
     }
 
     @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        mIsAttachToWindow = true;
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        super.onDetachedFromWindow();
+        mIsAttachToWindow = false;
+    }
+
+    @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        final int paddingStart = getPaddingLeft();
-        final int paddingEnd = getPaddingRight();
+        int itemsWidth = 0;
+        int itemsHeight = 0;
+
+        final int paddingLeft = getPaddingLeft();
+        final int paddingRight = getPaddingRight();
         final int paddingTop = getPaddingTop();
         final int paddingBottom = getPaddingBottom();
         final int suggestedMinimumWidth = getSuggestedMinimumWidth();
         final int suggestedMinimumHeight = getSuggestedMinimumHeight();
+
+        int oldNumRows = mNumRows;
+
+        checkFirstMeasure(widthMeasureSpec, heightMeasureSpec);
+
+        Segment s = getCurrentSegment();
+        if (s != null) {
+            mNumRows = s.rows;
+            itemsHeight = s.height;
+            itemsWidth = s.width;
+        }
+
+        itemsWidth = Math.max(paddingLeft + itemsWidth + paddingRight, suggestedMinimumWidth);
+        itemsHeight = Math.max(paddingTop + itemsHeight + paddingBottom, suggestedMinimumHeight);
+        setMeasuredDimension(resolveSize(itemsWidth, widthMeasureSpec),
+                resolveSize(itemsHeight, heightMeasureSpec));
+        if (mNumRows != oldNumRows) {
+            segments.clear();
+            forceLayout();
+        }
+    }
+
+    private void checkFirstMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        Segment s = getCurrentSegment();
+        if (s == null) {// || segments.isEmpty() && adapter.getTotalDataSize() != 0) {
+            preMeasureAllItem(widthMeasureSpec, heightMeasureSpec);
+        }
+    }
+
+    private Segment getCurrentSegment() {
+        Segment s = curSegIndex < segments.size() && curSegIndex >= 0 ? segments.get(curSegIndex) : null;
+        curSegment = s;
+        return s;
+    }
+
+    private void preMeasureAllItem(int widthMeasureSpec, int heightMeasureSpec) {
+        int dataIndex = 0;
+        int totalDataSize = adapter.getTotalDataSize();
+        findPageMap.clear();
+        segments.clear();
+        curSegIndex = 0;
+        while (dataIndex < totalDataSize) {
+            reuseSegment = new Segment(0, 0, 0);
+            reuseSegment.start = dataIndex;
+            reuseSegment.end = dataIndex + MAX_PER_MEASURE_CNT;
+            reuseSegment.size = MAX_PER_MEASURE_CNT;
+            findPageMap.put(dataIndex, reuseSegment.start);
+            calcOnePage(widthMeasureSpec, heightMeasureSpec, reuseSegment);
+            dataIndex += reuseSegment.size;
+            segments.add(reuseSegment);
+        }
+    }
+
+    private SparseArray<Integer> findPageMap = new SparseArray<>();
+    private List<Segment> segments = new ArrayList<>();
+    private int curSegIndex = 0;
+    private Segment curSegment = null;
+    Segment reuseSegment = new Segment(0, 0, 0);
+
+    private void calcOnePage(int widthMeasureSpec, int heightMeasureSpec, Segment segment) {
+        final int paddingTop = getPaddingTop();
+        final int paddingBottom = getPaddingBottom();
         final int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         final int widthSize = MeasureSpec.getSize(widthMeasureSpec);
         final int heightMode = MeasureSpec.getSize(heightMeasureSpec);
         final int heightSize = MeasureSpec.getSize(heightMeasureSpec);
-        int itemsWidth = 0;
-        int itemsHeight = 0;
-        int oldNumRows = mNumRows;
+        int collectHeight = 0;
+        int collectWidth = 0;
         mNumRows = 0;
         mNumColumns.clear();
+        ArrayList<Integer> mChildMaxWidth = new ArrayList<>();
         mChildMaxWidth.clear();
-        if (getChildCount() > 0) {
-            if (heightMode == MeasureSpec.UNSPECIFIED) {
-                // TODO: empty implement
-            } else {
-                int numColumns = 0;
+
+        int childCount = segment.size;
+        if (childCount > 0) {
+            int numColumns = 0;
 //                final int maxItemsWidth = widthSize - paddingStart - paddingEnd;
-                final int maxItemsHeight = heightSize - paddingTop - paddingBottom;
-                int rowWidth = 0;
-                int rowHeight = 0;
-                for (int index = 0; index < getChildCount(); index++) {
-                    View child = getChildAt(index);
-                    LayoutParams lp = (LayoutParams) child.getLayoutParams();
-                    if (child.getVisibility() == View.GONE) {
-                        lp.isWithinValidLayout = false;
-                        lp.isInvisibleOutValidLayout = false;
-                        continue;
-                    }
+            final int maxItemsHeight = heightSize - paddingTop - paddingBottom;
+            int rowWidth = 0;
+            int rowHeight = 0;
+            int end = Math.min(segment.end, adapter.getTotalDataSize());
+            for (int index = segment.start; index < end; index++) {
+                View child = getViewOf(index);
+                LayoutParams lp = (LayoutParams) child.getLayoutParams();
+                if (child.getVisibility() == View.GONE) {
+                    lp.isWithinValidLayout = false;
+                    lp.isInvisibleOutValidLayout = false;
+                    continue;
+                }
 //                    if (mNumRows == 0) mNumRows = 1;
-                    measureChild(child, widthMeasureSpec, heightMeasureSpec);
-                    final int childWidth = child.getMeasuredWidth();
-                    final int childHeight = child.getMeasuredHeight();
-                    if(rowHeight + childHeight + mVerticalSpacing <= maxItemsHeight) {
-                        rowHeight += childHeight + mVerticalSpacing;
-                        mChildTop.add(rowHeight);
-                        mNumRows ++;
-                        mChildMaxWidth.add(childHeight + mVerticalSpacing);
-                        lp.isWithinValidLayout = true;
-                        lp.isInvisibleOutValidLayout = false;
-                        // TODO: refect
-                        itemsHeight  += mNumRows == 1 ? rowHeight : mVerticalSpacing + rowHeight;
-                    } else {
-                        mChildMaxWidth.add(childHeight + mVerticalSpacing);
-                        lp.isWithinValidLayout = false;
-                        lp.isInvisibleOutValidLayout = false;
-                    }
+                measureChild(child, widthMeasureSpec, heightMeasureSpec);
+                final int childWidth = child.getMeasuredWidth();
+                final int childHeight = child.getMeasuredHeight();
+                if (rowHeight + childHeight + mVerticalSpacing <= maxItemsHeight) {
+                    rowHeight += childHeight + mVerticalSpacing;
+                    mNumRows++;
+                    mChildMaxWidth.add(childHeight + mVerticalSpacing);
+                    lp.isWithinValidLayout = true;
+                    lp.isInvisibleOutValidLayout = false;
+                    // TODO: refect
+                    collectHeight += mNumRows == 1 ? rowHeight : mVerticalSpacing + rowHeight;
+                } else {
+                    mChildMaxWidth.add(childHeight + mVerticalSpacing);
+                    lp.isWithinValidLayout = false;
+                    lp.isInvisibleOutValidLayout = false;
+                }
 //                    if (numColumns == 0) {
 //                        rowWidth = -mHorizontalSpacing;
 //                    }
@@ -185,36 +269,76 @@ public class AutoExcludeLayout extends ViewGroup {
 //                        rowHeight = Math.max(childHeight, rowHeight);
 //                        numColumns++;
 //                    }
-                }
+            }
 //                if (numColumns != 0) {
 //                    itemsHeight += mNumRows == 1 ? rowHeight : mVerticalSpacing + rowHeight;
 //                    mNumColumns.add(numColumns);
 //                    mChildMaxWidth.add(rowHeight);
 //                }
-            }
         }
-        itemsWidth = Math.max(paddingStart + itemsWidth + paddingEnd, suggestedMinimumWidth);
+        segment.height = collectHeight;
+        segment.width = collectWidth;
+        segment.childMaxWidth = mChildMaxWidth;
+        segment.size = mNumRows;
+        segment.rows = mNumRows;
+        segment.end = segment.start + segment.size;
 
-        itemsHeight = Math.max(paddingTop + itemsHeight + paddingBottom, suggestedMinimumHeight);
-        setMeasuredDimension(resolveSize(itemsWidth, widthMeasureSpec),
-                resolveSize(itemsHeight, heightMeasureSpec));
-        if(mNumRows!=oldNumRows) forceLayout();
+    }
+
+    private View getViewOf(int index) {
+        ViewHolder vh = vhCache.get(index);
+        if (index >= vhCache.size() || index < 0 || vhCache.get(index) == null) {
+            vh = obtainViewHolder(index);
+            vhCache.put(index, vh);
+        }
+        return vh.itemView;
+    }
+
+    private SparseArray<ViewHolder> vhCache = new SparseArray<>();
+
+    private ViewHolder obtainViewHolder(int index) {
+        ViewHolder holder = adapter.onCreateViewHolderAt(index, this);
+        final ViewGroup.LayoutParams lp = holder.itemView.getLayoutParams();
+        final LayoutParams aeLayoutParams;
+        if (lp == null) {
+            aeLayoutParams = (LayoutParams) generateDefaultLayoutParams();
+            holder.itemView.setLayoutParams(aeLayoutParams);
+        } else if (!checkLayoutParams(lp)) {
+            aeLayoutParams = (LayoutParams) generateLayoutParams(lp);
+            holder.itemView.setLayoutParams(aeLayoutParams);
+        } else {
+            aeLayoutParams = (LayoutParams) lp;
+        }
+        aeLayoutParams.mViewHolder = holder;
+        return holder;
     }
 
     @Override
     protected void onLayout(boolean changed, int l, int t, int r, int b) {
+        Segment s = curSegment == null && !segments.isEmpty() ? segments.get(curSegIndex) : curSegment;
+        if (s == null) {
+            return;
+        }
+        curSegment = s;
+        mNumRows = s.rows;
+        layoutChunk(s);
+    }
+
+    protected void layoutChunk(Segment segment) {
+        if (isLayouting) return;
+        isLayouting = true;
+        removeAllViews();
         final int paddingStart = getPaddingLeft();
         final int paddingTop = getPaddingTop();
         final int gravity = mGravity;
         int numChild = 0;
         int columnTop = paddingTop - mVerticalSpacing;
-        int size = getChildCount();
-        for (int row = 0; row < size; row++) {
+        for (int row = segment.start; row < segment.end; ) { // row++
             int numColumn = 1; //mNumColumns.get(row);
-            int childMaxHeight = mChildMaxWidth.get(row);
-            int startX = 0;//paddingStart - mHorizontalSpacing;
+            int childMaxHeight = segment.childMaxWidth.get(row - segment.start);
+            int startX = paddingStart - mHorizontalSpacing;
             for (int index = 0; index < numColumn; ) {
-                View childView = getChildAt(numChild);
+                View childView = getViewOf(row);
                 LayoutParams lp = (LayoutParams) childView.getLayoutParams();
 
                 numChild++;
@@ -223,10 +347,9 @@ public class AutoExcludeLayout extends ViewGroup {
                 }
                 final int childWidth = childView.getMeasuredWidth();
                 final int childHeight = childView.getMeasuredHeight();
-                final LayoutParams layoutParams = (LayoutParams) childView.getLayoutParams();
-                final int childGravity = layoutParams.getGravity();
+                final int childGravity = lp.getGravity();
 
-//                startX += mHorizontalSpacing;
+                startX += mHorizontalSpacing;
                 int topOffset = 0;
                 switch (childGravity) {
                     default:
@@ -259,22 +382,26 @@ public class AutoExcludeLayout extends ViewGroup {
 //                childView.layout(startX, startY, startX + childWidth, startY + childHeight);
 
 //                startX += childWidth;
-                index++;
 //                if(!lp.isWithinValidLayout) continue;
-                if(startY + childHeight > getMeasuredHeight()) {
-                    mNumLayoutRows = index;
+                if (startY + childHeight > getMeasuredHeight()) {
+                    segment.layoutRows = row + 1;
                     lp.isInvisibleOutValidLayout = true;
                     childView.setVisibility(View.INVISIBLE);
+                    removeView(childView);
                 } else {
+                    addView(childView);
                     childView.layout(startX, startY, startX + childWidth, startY + childHeight);
                     if (childView.getVisibility() == View.INVISIBLE) {
                         lp.isInvisibleOutValidLayout = false;
                         childView.setVisibility(View.VISIBLE);
                     }
                 }
+                row++;
+                index++;
             }
             columnTop += mVerticalSpacing + childMaxHeight;
         }
+        isLayouting = false;
     }
 
     /**
@@ -359,12 +486,22 @@ public class AutoExcludeLayout extends ViewGroup {
         requestLayout();
     }
 
+    public void setAdapter(Adapter adapter) {
+        if (this.adapter != null) {
+            this.adapter.unregisterAdapterDataObserver(mObserver);
+        }
+        this.adapter = adapter;
+        if (adapter != null) {
+            adapter.registerAdapterDataObserver(mObserver);
+        }
+    }
+
     /**
      * Per-child layout information associated with AutoExcludeLayout.
      */
     @SuppressWarnings("WeakerAccess")
     public static class LayoutParams extends ViewGroup.MarginLayoutParams {
-
+        public ViewHolder mViewHolder;
         private int mGravity = AutoExcludeLayout.GRAVITY_PARENT;
         private boolean isWithinValidLayout;
         private boolean isInvisibleOutValidLayout;
@@ -407,6 +544,132 @@ public class AutoExcludeLayout extends ViewGroup {
          */
         public void setGravity(int gravity) {
             mGravity = gravity;
+        }
+    }
+
+    private class MtObserver extends AdapterDataObserver {
+        MtObserver() {
+        }
+
+        @Override
+        public void onChanged() {
+            requestLayout();
+        }
+
+        @Override
+        public void onItemRangeChanged(int positionStart, int itemCount, Object payload) {
+            triggerUpdateProcessor();
+        }
+
+        @Override
+        public void onItemRangeInserted(int positionStart, int itemCount) {
+            triggerUpdateProcessor();
+        }
+
+        @Override
+        public void onItemRangeRemoved(int positionStart, int itemCount) {
+            triggerUpdateProcessor();
+        }
+
+        @Override
+        public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+            triggerUpdateProcessor();
+        }
+
+        void triggerUpdateProcessor() {
+            mAdapterUpdateDuringMeasure = true;
+            requestLayout();
+        }
+    }
+
+    public static class Adapter<T> {
+        private AdapterDataObservable mObservable = new AdapterDataObservable();
+        private SparseArray<ViewHolder> viewHolderSparseArray = new SparseArray<>();
+        public List<CementItem<?>> cementItems = new ArrayList<>();
+
+        public ViewHolder onCreateViewHolderAt(int index, ViewGroup parent) {
+            CementItem<?> item = cementItems.get(index);
+            ViewHolder vh = findViewHolder(item, parent);
+            return vh;
+        }
+
+        //        <editor-fold desc="AdapterDataObserver">
+        public void registerAdapterDataObserver(@NonNull AdapterDataObserver observer) {
+            mObservable.registerObserver(observer);
+        }
+
+        public void unregisterAdapterDataObserver(@NonNull AdapterDataObserver observer) {
+            mObservable.unregisterObserver(observer);
+        }
+
+        public final boolean hasObservers() {
+            return mObservable.hasObservers();
+        }
+
+        public final void notifyDataSetChanged() {
+            mObservable.notifyChanged();
+        }
+
+        public final void notifyItemChanged(int position) {
+            mObservable.notifyItemRangeChanged(position, 1);
+        }
+
+        public final void notifyItemRangeChanged(int positionStart, int itemCount) {
+            mObservable.notifyItemRangeChanged(positionStart, itemCount);
+        }
+
+        public final void notifyItemInserted(int position) {
+            mObservable.notifyItemRangeInserted(position, 1);
+        }
+
+        public final void notifyItemMoved(int fromPosition, int toPosition) {
+            mObservable.notifyItemMoved(fromPosition, toPosition);
+        }
+
+        public final void notifyItemRangeInserted(int positionStart, int itemCount) {
+            mObservable.notifyItemRangeInserted(positionStart, itemCount);
+        }
+
+        public final void notifyItemRemoved(int position) {
+            mObservable.notifyItemRangeRemoved(position, 1);
+        }
+
+        public final void notifyItemRangeRemoved(int positionStart, int itemCount) {
+            mObservable.notifyItemRangeRemoved(positionStart, itemCount);
+        }
+//        </editor-fold>
+
+        private ViewHolder findViewHolder(CementItem<?> item, ViewGroup parent) {
+            int layoutId = item.getLayoutId();
+            View view = LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
+            ViewHolder vh = new ViewHolder(view);
+            item.onBindViewHolder(vh, parent);
+            viewHolderSparseArray.put(layoutId, vh);
+            return vh;
+        }
+
+        public void clearData() {
+            int intialSize = cementItems.size();
+            cementItems.clear();
+            notifyItemRangeRemoved(intialSize, cementItems.size());
+        }
+
+        public void addDataList(List<CementItem<?>> cements) {
+            int intialSize = cementItems.size();
+            this.cementItems.addAll(cements);
+            notifyItemRangeInserted(intialSize, cementItems.size());
+        }
+
+        public int getTotalDataSize() {
+            return cementItems.size();
+        }
+    }
+
+    public static class ViewHolder {
+        private final View itemView;
+
+        ViewHolder(View itemView) {
+            this.itemView = itemView;
         }
     }
 }

@@ -23,11 +23,19 @@ import android.view.ViewGroup;
 import android.widget.RadioGroup;
 import android.widget.SeekBar;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+import am.widget.wraplayout.RandomUtils;
 import androidx.annotation.Nullable;
 
 import am.appcompat.app.BaseActivity;
 import am.project.x.R;
 import am.widget.wraplayout.WrapLayout;
+import autoexclue.AutoExcludeLayout;
+import autoexclue.CementItem;
+import autoexclue.ExerciseCementItem;
 
 /**
  * 自动换行布局
@@ -35,7 +43,7 @@ import am.widget.wraplayout.WrapLayout;
 public class WrapLayoutActivity extends BaseActivity implements RadioGroup.OnCheckedChangeListener,
         SeekBar.OnSeekBarChangeListener {
 
-    private WrapLayout mVContent;
+    private AutoExcludeLayout mVContent;
     private View other;
 
     public WrapLayoutActivity() {
@@ -65,7 +73,26 @@ public class WrapLayoutActivity extends BaseActivity implements RadioGroup.OnChe
         vertical.setProgress(15);
         height.setOnSeekBarChangeListener(this);
         height.setProgress(15);
+        initAutoLayout();
     }
+
+    private void initAutoLayout() {
+        adapter = new AutoExcludeLayout.Adapter();
+        mVContent.setAdapter(adapter);
+        generateData();
+    }
+
+    private void generateData() {
+        adapter.clearData();
+        List<CementItem<?>> a = new ArrayList<>();
+        int size = RandomUtils.nextInt(1, 12);
+        for (int i = 0; i < size; i++) {
+            a.add(new ExerciseCementItem("titele: " + RandomUtils.nextDouble()));
+        }
+        adapter.addDataList(a);
+    }
+
+    AutoExcludeLayout.Adapter adapter;
 
     // Listener
     @Override
