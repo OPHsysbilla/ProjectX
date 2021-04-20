@@ -148,7 +148,6 @@ class AutoPagerView : ViewGroup {
 //        val widthSize = MeasureSpec.getSize(widthMeasureSpec)
 //        val heightMode = MeasureSpec.getSize(heightMeasureSpec)
 //        val heightSize = MeasureSpec.getSize(heightMeasureSpec)
-        if (lastHeightSpec != 0 && lastWidthSpec != 0) return
         lastWidthSpec = widthMeasureSpec
         lastHeightSpec = heightMeasureSpec
         preMeasureAllItem(widthMeasureSpec, heightMeasureSpec)
@@ -162,7 +161,7 @@ class AutoPagerView : ViewGroup {
         val mAdapter = adapter
         mAdapter ?: throw IllegalArgumentException(" no Adapter for what? ")
         var dataIndex = 0
-        val totalDataSize = mAdapter.totalDataSize
+        val totalDataSize = mAdapter.totalDataSize()
         findPageMap.clear()
         segments.clear()
         var page = 0
@@ -208,7 +207,7 @@ class AutoPagerView : ViewGroup {
             val maxItemsHeight = heightSize - paddingTop - paddingBottom
             val rowWidth = 0
             var rowHeight = 0
-            val end = Math.min(segment.measureEnd, mAdapter.totalDataSize)
+            val end = Math.min(segment.measureEnd, mAdapter.totalDataSize())
             for (index in segment.start until end) {
                 val child = getViewOf(index)
                 val lp = child?.layoutParams as LayoutParams
@@ -221,14 +220,13 @@ class AutoPagerView : ViewGroup {
                 measureChild(child, widthMeasureSpec, heightMeasureSpec)
                 val childWidth = child.measuredWidth
                 val childHeight = child.measuredHeight
-                if (rowHeight + childHeight + mVerticalSpacing <= maxItemsHeight) {
-                    rowHeight += if (rows == 1) childHeight else mVerticalSpacing + childHeight
+                val curRowHeight = if (rows == 0) childHeight else mVerticalSpacing + childHeight
+                if (collectHeight + curRowHeight <= maxItemsHeight) {
+                    collectHeight += curRowHeight
                     rows++
                     mChildMaxWidth.add(childHeight + mVerticalSpacing)
                     lp.isWithinValidLayout = true
                     lp.isInvisibleOutValidLayout = false
-                    // TODO: refect
-                    collectHeight = rowHeight
                 } else {
                     mChildMaxWidth.add(childHeight + mVerticalSpacing)
                     lp.isWithinValidLayout = false
@@ -312,7 +310,7 @@ class AutoPagerView : ViewGroup {
     private fun onLayoutFinish() {
         val c = getCurSegment()
         Log.d("autopagers", "onLayoutFinish: page index: ${curSegIndex + 1}/${segments.size}， " +
-                "cur page: range [${c?.start} - ${c?.end}) = curItemNum: ${c?.size} / totalItemNum: ${adapter?.totalDataSize}")
+                "cur page: range [${c?.start} - ${c?.end}) = curItemNum: ${c?.size} / totalItemNum: ${adapter?.totalDataSize()}")
         callback?.invoke("${curSegIndex + 1}/${segments.size}")
     }
 
@@ -346,7 +344,7 @@ class AutoPagerView : ViewGroup {
         var start = pre?.end ?: 0
         start = Math.max(start, 0)
 
-        val end = Math.min(start + MAX_PER_MEASURE_CNT, adapter?.totalDataSize ?: 0)
+        val end = Math.min(start + MAX_PER_MEASURE_CNT, adapter?.totalDataSize() ?: 0)
         var dataIndex = start
         while (dataIndex < end) {
             // row++
@@ -362,9 +360,7 @@ class AutoPagerView : ViewGroup {
                 }
                 val childWidth = childView.measuredWidth
                 val childHeight = childView.measuredHeight
-                childMaxHeight = Math.max(childMaxHeight, childHeight)
                 val lp = childView.layoutParams as LayoutParams
-                val childGravity = lp.gravity
                 startX += mHorizontalSpacing
                 val startY = columnTop + mVerticalSpacing
                 //                childView.layout(startX, startY, startX + childWidth, startY + childHeight);
@@ -380,6 +376,7 @@ class AutoPagerView : ViewGroup {
                     segment.layoutRows = visibleCount
                     addView(childView)
                     childView.layout(startX, startY, startX + childWidth, startY + childHeight)
+                    childMaxHeight = Math.max(childMaxHeight, childHeight)
                     if (childView.visibility == INVISIBLE) {
                         lp.isInvisibleOutValidLayout = false
                         childView.visibility = VISIBLE
@@ -521,7 +518,7 @@ class AutoPagerView : ViewGroup {
     }
 
     abstract class Adapter<VH : ViewHolder> {
-        abstract val totalDataSize: Int
+        abstract fun totalDataSize(): Int
 
         private val mObservable = AdapterDataObservable()
         private val viewHolderSparseArray = SparseArray<VH>()

@@ -24,9 +24,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
         displyItems.addAll(cements)
     }
 
-    override val totalDataSize: Int
-        get() = displyItems.size
-
+    override fun totalDataSize(): Int =  displyItems.size
 
     class CellList : ArrayList<AbstractCellItem<*>>() {
         val viewHolderFactory = ViewHolderFactory()
