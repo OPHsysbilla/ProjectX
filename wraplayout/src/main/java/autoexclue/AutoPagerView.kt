@@ -222,13 +222,13 @@ class AutoPagerView : ViewGroup {
                 val childWidth = child.measuredWidth
                 val childHeight = child.measuredHeight
                 if (rowHeight + childHeight + mVerticalSpacing <= maxItemsHeight) {
-                    rowHeight += childHeight + mVerticalSpacing
+                    rowHeight += if (rows == 1) childHeight else mVerticalSpacing + childHeight
                     rows++
                     mChildMaxWidth.add(childHeight + mVerticalSpacing)
                     lp.isWithinValidLayout = true
                     lp.isInvisibleOutValidLayout = false
                     // TODO: refect
-                    collectHeight += if (rows == 1) rowHeight else mVerticalSpacing + rowHeight
+                    collectHeight = rowHeight
                 } else {
                     mChildMaxWidth.add(childHeight + mVerticalSpacing)
                     lp.isWithinValidLayout = false
@@ -312,7 +312,7 @@ class AutoPagerView : ViewGroup {
     private fun onLayoutFinish() {
         val c = getCurSegment()
         Log.d("autopagers", "onLayoutFinish: page index: ${curSegIndex + 1}/${segments.size}， " +
-                "cur page: range [${c?.start} - ${c?.end}) = curSize: ${c?.size} / totalSize: ${adapter?.totalDataSize}")
+                "cur page: range [${c?.start} - ${c?.end}) = curItemNum: ${c?.size} / totalItemNum: ${adapter?.totalDataSize}")
         callback?.invoke("${curSegIndex + 1}/${segments.size}")
     }
 
