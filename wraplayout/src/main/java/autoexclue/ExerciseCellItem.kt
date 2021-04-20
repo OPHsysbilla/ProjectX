@@ -14,7 +14,7 @@ class ExerciseCellItem(s: String?) : AbstractCellItem<ExerciseCellItem.ViewHolde
         holder.tv.text = str
     }
 
-    override val viewHolderCreator: IViewHolderCreator<ViewHolder> = viewHolderCreatorEx { view: View -> ViewHolder(view) }
+    override val viewHolderCreator: IViewHolderCreator<ViewHolder> = pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }
     override val layoutRes: Int
         get() = R.layout.layout_cement_test
 

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Segment {
     public int layoutRows;
     ArrayList<Integer> childMaxWidth;
-    int rows;
+    int measureRows;
 
     Segment(int start,
             int end,
