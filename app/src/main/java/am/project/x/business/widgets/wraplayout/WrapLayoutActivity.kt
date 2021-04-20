@@ -26,7 +26,7 @@ import android.view.View
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
-import autoexclue.AutoPageListView
+import autoexclue.AutoPagerView
 import autoexclue.AutoPageAdapter
 import autoexclue.AbstractCellItem
 import autoexclue.ExerciseCellItem
@@ -36,12 +36,12 @@ import java.util.*
  * 自动换行布局
  */
 class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGroup.OnCheckedChangeListener, OnSeekBarChangeListener {
-    private var mVContent: AutoPageListView? = null
+    private var mVContent: AutoPagerView? = null
     private var other: View? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setSupportActionBar(R.id.wl_toolbar)
-        mVContent = findViewById<AutoPageListView>(R.id.wl_wl_content)
+        mVContent = findViewById<AutoPagerView>(R.id.wl_wl_content)
         other = findViewById(R.id.ohter_layout)
         val gravity = findViewById<RadioGroup>(R.id.wl_rg_gravity)
         val horizontal = findViewById<SeekBar>(R.id.wl_sb_horizontal)

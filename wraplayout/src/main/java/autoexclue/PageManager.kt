@@ -4,7 +4,7 @@ import android.util.SparseArray
 import java.util.*
 
 class PageManager {
-    var layout: AutoPageListView? = null
+    var layout: AutoPagerView? = null
     var data: List<AbstractCellItem<*>>? = null
     var segments: List<Segment>? = null
     var findPageMap: SparseArray<Int>? = null

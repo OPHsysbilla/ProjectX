@@ -18,7 +18,7 @@ class ExerciseCellItem(s: String?) : AbstractCellItem<ExerciseCellItem.ViewHolde
     override val layoutRes: Int
         get() = R.layout.layout_cement_test
 
-    class ViewHolder internal constructor(itemView: View) : AutoPageListView.ViewHolder(itemView) {
+    class ViewHolder internal constructor(itemView: View) : AutoPagerView.ViewHolder(itemView) {
         val tv: TextView = itemView.findViewById(R.id.tv_item_simple_title)
     }
 

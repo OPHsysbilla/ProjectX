@@ -6,7 +6,7 @@ import androidx.annotation.LayoutRes
 /**
  * Created by lei.jialin on 2021/4/19
  */
-abstract class AbstractCellItem<T: AutoPageListView.ViewHolder> {
+abstract class AbstractCellItem<T: AutoPagerView.ViewHolder> {
 
     abstract val viewHolderCreator: IViewHolderCreator<T>
 

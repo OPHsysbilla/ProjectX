@@ -7,11 +7,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 
-class AutoPageAdapter : AutoPageListView.Adapter<AutoPageListView.ViewHolder>() {
+class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
     //        </editor-fold>
     var displyItems = CellList()
 
-    override fun onCreateViewHolderAt(index: Int, parent: ViewGroup): AutoPageListView.ViewHolder {
+    override fun onCreateViewHolderAt(index: Int, parent: ViewGroup): AutoPagerView.ViewHolder {
         val item = displyItems.getOrNull(index) ?: throw IllegalAccessException(" out of box~ ")
         return displyItems.viewHolderFactory.create(item.viewType, parent)
     }
@@ -78,7 +78,7 @@ class AutoPageAdapter : AutoPageListView.Adapter<AutoPageListView.ViewHolder>() 
             }
         }
 
-        fun create(@LayoutRes viewType: Int, parent: ViewGroup): AutoPageListView.ViewHolder {
+        fun create(@LayoutRes viewType: Int, parent: ViewGroup): AutoPagerView.ViewHolder {
             val info = creatorSparseArray[viewType]
                     ?: throw RuntimeException("cannot find viewHolderCreator for viewType=$viewType")
             return try {
@@ -90,8 +90,8 @@ class AutoPageAdapter : AutoPageListView.Adapter<AutoPageListView.ViewHolder>() 
         }
     }
 
-    override fun bindData2ViewHolder(index: Int, vh: AutoPageListView.ViewHolder, parent: ViewGroup) {
-       val item = displyItems.getOrNull(index) as? AbstractCellItem<AutoPageListView.ViewHolder> ?: return
+    override fun bindData2ViewHolder(index: Int, vh: AutoPagerView.ViewHolder, parent: ViewGroup) {
+       val item = displyItems.getOrNull(index) as? AbstractCellItem<AutoPagerView.ViewHolder> ?: return
         item.onBindViewHolder(vh, parent)
     }
 
