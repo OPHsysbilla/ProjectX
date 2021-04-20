@@ -6,6 +6,9 @@ public class Segment {
     int layoutRows;
     ArrayList<Integer> childMaxWidth;
     int measureRows;
+    int measureStart;
+    int measureSize;
+    int measureEnd;
     boolean haveMeasured;
 
     Segment(int start,
