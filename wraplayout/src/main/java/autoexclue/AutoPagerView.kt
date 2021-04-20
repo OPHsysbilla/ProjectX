@@ -148,7 +148,7 @@ class AutoPagerView : ViewGroup {
 //        val widthSize = MeasureSpec.getSize(widthMeasureSpec)
 //        val heightMode = MeasureSpec.getSize(heightMeasureSpec)
 //        val heightSize = MeasureSpec.getSize(heightMeasureSpec)
-        if(widthMeasureSpec == lastWidthSpec && heightMeasureSpec == lastHeightSpec) return
+        if (lastHeightSpec != 0 && lastWidthSpec != 0) return
         lastWidthSpec = widthMeasureSpec
         lastHeightSpec = heightMeasureSpec
         preMeasureAllItem(widthMeasureSpec, heightMeasureSpec)

@@ -78,7 +78,7 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
     private fun generateData() {
         adapter.clearData()
         val a: MutableList<AbstractCellItem<*>> = ArrayList()
-        val size = RandomUtils.nextInt(1, 20)
+        val size = RandomUtils.nextInt(1, 100)
         for (i in 0 until size) {
             a.add(ExerciseCellItem(i, "titele: " + RandomUtils.nextDouble()))
         }

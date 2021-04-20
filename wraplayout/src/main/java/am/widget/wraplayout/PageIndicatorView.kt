@@ -14,6 +14,7 @@ import android.widget.TextView
  * Created by lei.jialin on 2021/3/25
  */
 open class PageIndicatorView : FrameLayout {
+    private var decorateText: String = ""
     protected var btnPrev: View? = null
     protected var btnNext: View? = null
     protected var tvPageIndex: TextView? = null
@@ -62,6 +63,7 @@ open class PageIndicatorView : FrameLayout {
     }
 
     fun setPageDecorateText(text: String) {
+        this.decorateText = text
         tvPageIndex?.text = text
     }
 
@@ -72,6 +74,7 @@ open class PageIndicatorView : FrameLayout {
         btnPrev = findViewById(R.id.btn_prev_page)
         btnNext = findViewById(R.id.btn_next_page)
         tvPageIndex = findViewById(R.id.tv_page_index)
+        tvPageIndex?.text = decorateText
     }
 
     protected open fun initEvent() {
