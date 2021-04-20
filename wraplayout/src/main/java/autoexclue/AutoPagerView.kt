@@ -119,7 +119,9 @@ class AutoPagerView : ViewGroup {
         mIsAttachToWindow = false
     }
 
+    private var measureStartTime = 0L
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        measureStartTime = System.currentTimeMillis()
         var itemsWidth = 0
         var itemsHeight = 0
         val paddingLeft = paddingLeft
@@ -139,6 +141,7 @@ class AutoPagerView : ViewGroup {
         itemsHeight = Math.max(paddingTop + itemsHeight + paddingBottom, suggestedMinimumHeight)
         setMeasuredDimension(resolveSize(itemsWidth, widthMeasureSpec),
                 resolveSize(itemsHeight, heightMeasureSpec))
+        Log.d("autopagers", "onMeasure: ${System.currentTimeMillis() - measureStartTime}")
     }
 
     var lastWidthSpec = 0
@@ -336,7 +339,9 @@ class AutoPagerView : ViewGroup {
     fun totalPage() = segments.size
 
     protected fun layoutChunk(segment: Segment, pre: Segment?) {
+        val startTime = System.currentTimeMillis()
         removeAllViews()
+        Log.d("autopagers", "removeAllViews: ${System.currentTimeMillis() - startTime}")
         val paddingStart = paddingLeft
         val paddingTop = paddingTop
         var visibleCount = 0
@@ -374,7 +379,9 @@ class AutoPagerView : ViewGroup {
                 } else {
                     visibleCount++
                     segment.layoutRows = visibleCount
+                    val addTime = System.currentTimeMillis()
                     addView(childView)
+                    Log.d("autopagers", "addView: ${System.currentTimeMillis() - addTime}")
                     childView.layout(startX, startY, startX + childWidth, startY + childHeight)
                     childMaxHeight = Math.max(childMaxHeight, childHeight)
                     if (childView.visibility == INVISIBLE) {
@@ -392,6 +399,7 @@ class AutoPagerView : ViewGroup {
         segment.size = segment.layoutRows
         segment.measureRows = segment.layoutRows
         segment.end = segment.start + segment.size
+        Log.d("autopagers", "onLayout: ${System.currentTimeMillis() - startTime}")
     }
     /**
      * 获取水平间距
