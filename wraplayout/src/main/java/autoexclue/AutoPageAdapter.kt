@@ -7,49 +7,49 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 
-class CementAdapter : AutoExcludeLayout.Adapter<AutoExcludeLayout.ViewHolder>() {
+class AutoPageAdapter : AutoPageListView.Adapter<AutoPageListView.ViewHolder>() {
     //        </editor-fold>
-    var cementItems = ModelList()
+    var displyItems = CellList()
 
-    override fun onCreateViewHolderAt(index: Int, parent: ViewGroup): AutoExcludeLayout.ViewHolder {
-        val item = cementItems.getOrNull(index) ?: throw IllegalAccessException(" out of box~ ")
-        return cementItems.viewHolderFactory.create(item.viewType, parent)
+    override fun onCreateViewHolderAt(index: Int, parent: ViewGroup): AutoPageListView.ViewHolder {
+        val item = displyItems.getOrNull(index) ?: throw IllegalAccessException(" out of box~ ")
+        return displyItems.viewHolderFactory.create(item.viewType, parent)
     }
     fun clearData() {
-        val intialSize = cementItems.size
-        cementItems.clear()
-        notifyItemRangeRemoved(intialSize, cementItems.size)
+        val intialSize = displyItems.size
+        displyItems.clear()
+        notifyItemRangeRemoved(intialSize, displyItems.size)
     }
 
-    fun addDataList(cements: List<CementItem<*>>?) {
+    fun addDataList(cements: List<AbstractCellItem<*>>?) {
         cements ?: return
-        val intialSize = cementItems.size
-        cementItems.addAll(cements)
-        notifyItemRangeInserted(intialSize, cementItems.size)
+        val intialSize = displyItems.size
+        displyItems.addAll(cements)
+        notifyItemRangeInserted(intialSize, displyItems.size)
     }
 
     override val totalDataSize: Int
-        get() = cementItems.size
+        get() = displyItems.size
 
 
-    class ModelList : ArrayList<CementItem<*>>() {
+    class CellList : ArrayList<AbstractCellItem<*>>() {
         val viewHolderFactory = ViewHolderFactory()
-        override fun add(element: CementItem<*>): Boolean {
+        override fun add(element: AbstractCellItem<*>): Boolean {
             viewHolderFactory.register(element)
             return super.add(element)
         }
 
-        override fun add(index: Int, element: CementItem<*>) {
+        override fun add(index: Int, element: AbstractCellItem<*>) {
             viewHolderFactory.register(element)
             super.add(index, element)
         }
 
-        override fun addAll(elements: Collection<CementItem<*>>): Boolean {
+        override fun addAll(elements: Collection<AbstractCellItem<*>>): Boolean {
             viewHolderFactory.register(elements)
             return super.addAll(elements)
         }
 
-        override fun addAll(index: Int, elements: Collection<CementItem<*>>): Boolean {
+        override fun addAll(index: Int, elements: Collection<AbstractCellItem<*>>): Boolean {
             viewHolderFactory.register(elements)
             return super.addAll(index, elements)
         }
@@ -58,7 +58,7 @@ class CementAdapter : AutoExcludeLayout.Adapter<AutoExcludeLayout.ViewHolder>() 
     //<editor-fold desc="ViewHolderFactory">
     class ViewHolderFactory {
         private val creatorSparseArray = SparseArray<Pair<Int, IViewHolderCreator<*>>?>()
-        fun register(cement: CementItem<*>) {
+        fun register(cement: AbstractCellItem<*>) {
             val viewType = cement.viewType
             if (viewType == View.NO_ID) {
                 throw RuntimeException("illegal viewType=$viewType")
@@ -71,14 +71,14 @@ class CementAdapter : AutoExcludeLayout.Adapter<AutoExcludeLayout.ViewHolder>() 
             }
         }
 
-        fun register(cements: Collection<CementItem<*>?>?) {
+        fun register(cements: Collection<AbstractCellItem<*>?>?) {
             cements ?: return
             for (cement in cements) {
                 cement?.let { register(cement) }
             }
         }
 
-        fun create(@LayoutRes viewType: Int, parent: ViewGroup): AutoExcludeLayout.ViewHolder {
+        fun create(@LayoutRes viewType: Int, parent: ViewGroup): AutoPageListView.ViewHolder {
             val info = creatorSparseArray[viewType]
                     ?: throw RuntimeException("cannot find viewHolderCreator for viewType=$viewType")
             return try {
@@ -90,8 +90,8 @@ class CementAdapter : AutoExcludeLayout.Adapter<AutoExcludeLayout.ViewHolder>() 
         }
     }
 
-    override fun bindData2ViewHolder(index: Int, vh: AutoExcludeLayout.ViewHolder, parent: ViewGroup) {
-       val item = cementItems.getOrNull(index) as? CementItem<AutoExcludeLayout.ViewHolder> ?: return
+    override fun bindData2ViewHolder(index: Int, vh: AutoPageListView.ViewHolder, parent: ViewGroup) {
+       val item = displyItems.getOrNull(index) as? AbstractCellItem<AutoPageListView.ViewHolder> ?: return
         item.onBindViewHolder(vh, parent)
     }
 

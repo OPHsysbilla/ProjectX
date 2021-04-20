@@ -8,9 +8,9 @@ import android.widget.TextView
 /**
  * Created by lei.jialin on 2021/4/19
  */
-class ExerciseCementItem(s: String?) : CementItem<ExerciseCementItem.ViewHolder>() {
+class ExerciseCellItem(s: String?) : AbstractCellItem<ExerciseCellItem.ViewHolder>() {
     private val str: String
-    override fun onBindViewHolder(holder: ExerciseCementItem.ViewHolder, parent: ViewGroup) {
+    override fun onBindViewHolder(holder: ExerciseCellItem.ViewHolder, parent: ViewGroup) {
         holder.tv.text = str
     }
 
@@ -18,7 +18,7 @@ class ExerciseCementItem(s: String?) : CementItem<ExerciseCementItem.ViewHolder>
     override val layoutRes: Int
         get() = R.layout.layout_cement_test
 
-    class ViewHolder internal constructor(itemView: View) : AutoExcludeLayout.ViewHolder(itemView) {
+    class ViewHolder internal constructor(itemView: View) : AutoPageListView.ViewHolder(itemView) {
         val tv: TextView = itemView.findViewById(R.id.tv_item_simple_title)
     }
 

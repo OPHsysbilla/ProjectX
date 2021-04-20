@@ -4,14 +4,14 @@ import android.util.SparseArray
 import java.util.*
 
 class PageManager {
-    var layout: AutoExcludeLayout? = null
-    var data: List<CementItem<*>>? = null
+    var layout: AutoPageListView? = null
+    var data: List<AbstractCellItem<*>>? = null
     var segments: List<Segment>? = null
     var findPageMap: SparseArray<Int>? = null
     var curSegment: Segment? = null
-    var adapter = CementAdapter()
+    var adapter = AutoPageAdapter()
     var pageCount = 0
-    private fun switchToItem(item: CementItem<*>) {
+    private fun switchToItem(item: AbstractCellItem<*>) {
         val find = data!!.indexOf(item)
         if (find == -1) return
         if (find >= 0 && find < data!!.size) {
@@ -23,7 +23,7 @@ class PageManager {
         val page = findPageByDataIndex(dataIndex)
         curSegment = segments!![page]
         adapter.clearData()
-        val items: MutableList<CementItem<*>> = ArrayList()
+        val items: MutableList<AbstractCellItem<*>> = ArrayList()
         for (i in curSegment!!.start until curSegment!!.end) {
             items.add(data!![i])
         }

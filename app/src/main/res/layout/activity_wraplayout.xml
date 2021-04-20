@@ -23,7 +23,7 @@
             android:background="@android:color/darker_gray"
             android:layout_height="100dp"></FrameLayout>
 
-        <autoexclue.AutoExcludeLayout
+        <autoexclue.AutoPageListView
             android:id="@+id/wl_wl_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

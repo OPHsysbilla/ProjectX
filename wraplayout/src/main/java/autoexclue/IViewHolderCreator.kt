@@ -2,6 +2,6 @@ package autoexclue
 
 import android.view.View
 
-interface IViewHolderCreator<VH : AutoExcludeLayout.ViewHolder> {
+interface IViewHolderCreator<VH : AutoPageListView.ViewHolder> {
     fun create(view: View): VH
 }

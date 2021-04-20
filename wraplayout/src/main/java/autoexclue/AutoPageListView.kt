@@ -14,7 +14,7 @@ import kotlin.collections.ArrayList
 /**
  * Created by lei.jialin on 2021/4/19
  */
-class AutoExcludeLayout : ViewGroup {
+class AutoPageListView : ViewGroup {
     var adapter: Adapter<*>? = null
         set(value) {
             field?.unregisterAdapterDataObserver(mObserver)

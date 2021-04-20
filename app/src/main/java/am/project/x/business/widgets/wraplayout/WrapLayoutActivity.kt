@@ -26,22 +26,22 @@ import android.view.View
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
-import autoexclue.AutoExcludeLayout
-import autoexclue.CementAdapter
-import autoexclue.CementItem
-import autoexclue.ExerciseCementItem
+import autoexclue.AutoPageListView
+import autoexclue.AutoPageAdapter
+import autoexclue.AbstractCellItem
+import autoexclue.ExerciseCellItem
 import java.util.*
 
 /**
  * 自动换行布局
  */
 class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGroup.OnCheckedChangeListener, OnSeekBarChangeListener {
-    private var mVContent: AutoExcludeLayout? = null
+    private var mVContent: AutoPageListView? = null
     private var other: View? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setSupportActionBar(R.id.wl_toolbar)
-        mVContent = findViewById<AutoExcludeLayout>(R.id.wl_wl_content)
+        mVContent = findViewById<AutoPageListView>(R.id.wl_wl_content)
         other = findViewById(R.id.ohter_layout)
         val gravity = findViewById<RadioGroup>(R.id.wl_rg_gravity)
         val horizontal = findViewById<SeekBar>(R.id.wl_sb_horizontal)
@@ -65,15 +65,15 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
 
     private fun generateData() {
         adapter.clearData()
-        val a: MutableList<CementItem<*>> = ArrayList()
+        val a: MutableList<AbstractCellItem<*>> = ArrayList()
         val size = RandomUtils.nextInt(1, 12)
         for (i in 0 until size) {
-            a.add(ExerciseCementItem("titele: " + RandomUtils.nextDouble()))
+            a.add(ExerciseCellItem("titele: " + RandomUtils.nextDouble()))
         }
         adapter.addDataList(a)
     }
 
-    var adapter = CementAdapter()
+    var adapter = AutoPageAdapter()
 
     // Listener
     override fun onCheckedChanged(group: RadioGroup, checkedId: Int) {
