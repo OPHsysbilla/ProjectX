@@ -16,16 +16,12 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
         return displyItems.viewHolderFactory.create(item.viewType, parent)
     }
     fun clearData() {
-        val intialSize = displyItems.size
         displyItems.clear()
-        notifyItemRangeRemoved(intialSize, displyItems.size)
     }
 
     fun addDataList(cements: List<AbstractCellItem<*>>?) {
         cements ?: return
-        val intialSize = displyItems.size
         displyItems.addAll(cements)
-        notifyItemRangeInserted(intialSize, displyItems.size)
     }
 
     override val totalDataSize: Int

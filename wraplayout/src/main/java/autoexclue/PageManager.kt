@@ -28,6 +28,7 @@ class PageManager {
             items.add(data!![i])
         }
         adapter.addDataList(items)
+        adapter.notifyDataSetChanged()
     }
 
     private fun findPageByDataIndex(dataIndex: Int): Int {

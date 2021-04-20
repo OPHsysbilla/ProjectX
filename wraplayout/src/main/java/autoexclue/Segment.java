@@ -3,9 +3,10 @@ package autoexclue;
 import java.util.ArrayList;
 
 public class Segment {
-    public int layoutRows;
+    int layoutRows;
     ArrayList<Integer> childMaxWidth;
     int measureRows;
+    boolean haveMeasured;
 
     Segment(int start,
             int end,

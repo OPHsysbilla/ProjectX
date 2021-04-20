@@ -30,6 +30,7 @@ import autoexclue.AutoPagerView
 import autoexclue.AutoPageAdapter
 import autoexclue.AbstractCellItem
 import autoexclue.ExerciseCellItem
+import kotlinx.android.synthetic.main.activity_wraplayout.*
 import java.util.*
 
 /**
@@ -59,6 +60,17 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
     }
 
     private fun initAutoLayout() {
+        pager_index.callback = { nextPage ->
+            val a = mVContent?.getCurrentIndex() ?: 0
+            if (nextPage) {
+                mVContent?.switchToPage(a + 1)
+            } else {
+                mVContent?.switchToPage(a - 1)
+            }
+        }
+        mVContent?.callback = {
+            pager_index.setPageDecorateText(it)
+        }
         mVContent!!.adapter = adapter
         generateData()
     }
@@ -66,11 +78,12 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
     private fun generateData() {
         adapter.clearData()
         val a: MutableList<AbstractCellItem<*>> = ArrayList()
-        val size = RandomUtils.nextInt(1, 12)
+        val size = RandomUtils.nextInt(1, 20)
         for (i in 0 until size) {
-            a.add(ExerciseCellItem("titele: " + RandomUtils.nextDouble()))
+            a.add(ExerciseCellItem(i, "titele: " + RandomUtils.nextDouble()))
         }
         adapter.addDataList(a)
+        mVContent?.switchToPage(0)
     }
 
     var adapter = AutoPageAdapter()
