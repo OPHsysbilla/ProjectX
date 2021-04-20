@@ -12,7 +12,7 @@ class ExerciseCellItem(private val index: Int, s: String?) : AbstractCellItem<Ex
     private val str: String
     override fun onBindViewHolder(holder: ExerciseCellItem.ViewHolder, parent: ViewGroup) {
         holder.tv.text = str
-        holder.tvLastExercise.text = "第${index}个"
+        holder.tvLastExercise.text = "第${index + 1}个"
 
     }
 

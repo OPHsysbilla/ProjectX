@@ -9,7 +9,6 @@ import android.util.SparseArray
 import android.util.SparseIntArray
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.util.getOrDefault
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -313,7 +312,7 @@ class AutoPagerView : ViewGroup {
     private fun onLayoutFinish() {
         val c = getCurSegment()
         Log.d("autopagers", "onLayoutFinish: page index: ${curSegIndex + 1}/${segments.size}， " +
-                "cur page data: (${c?.start} - ${c?.end} = ${c?.size})/ ${adapter?.totalDataSize}")
+                "cur page: range [${c?.start} - ${c?.end}) = curSize: ${c?.size} / totalSize: ${adapter?.totalDataSize}")
         callback?.invoke("${curSegIndex + 1}/${segments.size}")
     }
 
@@ -346,12 +345,14 @@ class AutoPagerView : ViewGroup {
         var columnTop = paddingTop - mVerticalSpacing
         var start = pre?.end ?: 0
         start = Math.max(start, 0)
+
+        val end = Math.min(start + MAX_PER_MEASURE_CNT, adapter?.totalDataSize ?: 0)
         var dataIndex = start
-        val end = Math.min(start + segment.measureRows, adapter?.totalDataSize ?: 0)
         while (dataIndex < end) {
             // row++
             val numColumn = 1 //mNumColumns.get(row);
-            val childMaxHeight = segment.childMaxWidth[dataIndex - start]
+//            val childMaxWidth = segment.childMaxWidth[dataIndex - start]
+            var childMaxHeight = 0
             var startX = paddingStart - mHorizontalSpacing
             var column = 0
             while (column < numColumn) {
@@ -361,6 +362,7 @@ class AutoPagerView : ViewGroup {
                 }
                 val childWidth = childView.measuredWidth
                 val childHeight = childView.measuredHeight
+                childMaxHeight = Math.max(childMaxHeight, childHeight)
                 val lp = childView.layoutParams as LayoutParams
                 val childGravity = lp.gravity
                 startX += mHorizontalSpacing
@@ -386,7 +388,7 @@ class AutoPagerView : ViewGroup {
                 column++
                 dataIndex++
             }
-            columnTop += mVerticalSpacing + childMaxHeight
+            columnTop += mVerticalSpacing + childMaxHeight//childMaxWidth
         }
         val lastEnd = pre?.end ?: 0
         segment.start = start
