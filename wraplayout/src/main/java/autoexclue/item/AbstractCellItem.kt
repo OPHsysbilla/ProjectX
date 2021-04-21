@@ -1,7 +1,8 @@
-package autoexclue
+package autoexclue.item
 
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
+import autoexclue.AutoPagerView
 
 /**
  * Created by lei.jialin on 2021/4/19
@@ -23,4 +24,6 @@ abstract class AbstractCellItem<T: AutoPagerView.ViewHolder> {
         return value
     }
     abstract fun onBindViewHolder(holder: T, parent: ViewGroup)
+
+    abstract fun firstAssumeMeasureHeight(): Int
 }

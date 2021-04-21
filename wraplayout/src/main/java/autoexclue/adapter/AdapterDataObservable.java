@@ -1,10 +1,10 @@
-package autoexclue;
+package autoexclue.adapter;
 
 import android.database.Observable;
 
 import androidx.annotation.Nullable;
 
-class AdapterDataObservable extends Observable<AdapterDataObserver> {
+public class AdapterDataObservable extends Observable<AdapterDataObserver> {
     public boolean hasObservers() {
         return !mObservers.isEmpty();
     }

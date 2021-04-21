@@ -26,7 +26,7 @@
         <autoexclue.AutoPagerView
             android:id="@+id/wl_wl_content"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="400dp"
             android:layout_margin="10dp"
             android:background="@drawable/bg_wraplayout_content"
             android:horizontalSpacing="10dp"

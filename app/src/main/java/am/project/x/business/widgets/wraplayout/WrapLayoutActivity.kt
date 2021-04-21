@@ -26,10 +26,11 @@ import android.view.View
 import android.widget.RadioGroup
 import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
+import autoexclue.adapter.AutoPageAdapter
+import autoexclue.item.AbstractCellItem
+import am.widget.wraplayout.item.ExerciseCellItem
+import am.widget.wraplayout.item.GroupTitleCellItem
 import autoexclue.AutoPagerView
-import autoexclue.AutoPageAdapter
-import autoexclue.AbstractCellItem
-import autoexclue.ExerciseCellItem
 import kotlinx.android.synthetic.main.activity_wraplayout.*
 import java.util.*
 
@@ -68,7 +69,7 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
                 mVContent?.switchToPage(a - 1)
             }
         }
-        mVContent?.callback = {
+        mVContent?.callbackPageIndex = {
             pager_index.setPageDecorateText(it)
         }
         mVContent!!.adapter = adapter
@@ -78,9 +79,13 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
     private fun generateData() {
         adapter.clearData()
         val a: MutableList<AbstractCellItem<*>> = ArrayList()
-        val size = RandomUtils.nextInt(1, 100)
-        for (i in 0 until size) {
-            a.add(ExerciseCellItem(i, "titele: " + RandomUtils.nextDouble()))
+        val groupSize = RandomUtils.nextInt(1, 10)
+        for (i in 0 until groupSize) {
+            val size = RandomUtils.nextInt(1, 10)
+            a.add(GroupTitleCellItem(i, "Group Title ${i}: " + RandomUtils.nextInt(0, 99999)))
+            for (j in 0 until size) {
+                a.add(ExerciseCellItem(j, "belong Group${i} : " + RandomUtils.nextDouble()))
+            }
         }
         adapter.addDataList(a)
         mVContent?.switchToPage(0)

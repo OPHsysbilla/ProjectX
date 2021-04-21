@@ -1,4 +1,4 @@
-package autoexclue
+package autoexclue.adapter
 
 import android.util.Pair
 import android.util.SparseArray
@@ -6,6 +6,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
+import autoexclue.AutoPagerView
+import autoexclue.item.IViewHolderCreator
+import autoexclue.item.AbstractCellItem
 
 class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
     //        </editor-fold>
@@ -83,6 +86,10 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
             }
         }
     }
+    var callbackHeight: ((dataIndex:Int) -> Int)? = null
+    override fun measureHeightAt(index: Int): Int
+       =  displyItems.getOrNull(index)?.firstAssumeMeasureHeight() ?: 0
+
 
     override fun bindData2ViewHolder(index: Int, vh: AutoPagerView.ViewHolder, parent: ViewGroup) {
        val item = displyItems.getOrNull(index) as? AbstractCellItem<AutoPagerView.ViewHolder> ?: return

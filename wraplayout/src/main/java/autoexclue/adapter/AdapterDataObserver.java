@@ -1,4 +1,4 @@
-package autoexclue;
+package autoexclue.adapter;
 
 import androidx.annotation.Nullable;
 
