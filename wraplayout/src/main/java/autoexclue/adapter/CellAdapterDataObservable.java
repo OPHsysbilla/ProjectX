@@ -4,7 +4,7 @@ import android.database.Observable;
 
 import androidx.annotation.Nullable;
 
-public class AdapterDataObservable extends Observable<AdapterDataObserver> {
+public class CellAdapterDataObservable extends Observable<CellAdapterDataObserver> {
     public boolean hasObservers() {
         return !mObservers.isEmpty();
     }

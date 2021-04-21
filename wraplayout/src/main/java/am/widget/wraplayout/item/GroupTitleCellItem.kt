@@ -5,7 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import autoexclue.AutoPagerView
-import autoexclue.item.IViewHolderCreator
+import autoexclue.item.IPagerViewHolderCreator
 import autoexclue.item.AbstractCellItem
 import autoexclue.item.pagerViewHolderCreatorEx
 
@@ -21,7 +21,7 @@ class GroupTitleCellItem(private val index: Int, private val str: String?) : Abs
 
     override fun firstAssumeMeasureHeight(): Int = 33
 
-    override val viewHolderCreator: IViewHolderCreator<ViewHolder> = pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }
+    override val pagerViewHolderCreator: IPagerViewHolderCreator<ViewHolder> = pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }
     override val layoutRes: Int
         get() = R.layout.layout_group_title_cell
 

@@ -8,8 +8,8 @@ import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
-import autoexclue.adapter.AdapterDataObservable
-import autoexclue.adapter.AdapterDataObserver
+import autoexclue.adapter.CellAdapterDataObservable
+import autoexclue.adapter.CellAdapterDataObserver
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -20,7 +20,13 @@ import kotlin.collections.ArrayList
  * 1. 增加 titleDecoration
  * 2. FIX callbackPageIndex没有显示的问题
  */
-class AutoPagerView : ViewGroup {
+open class AutoPagerView : ViewGroup {
+    companion object {
+        private const val MAX_PER_MEASURE_CNT = 10
+        private val ATTRS = intArrayOf(android.R.attr.horizontalSpacing,
+                android.R.attr.verticalSpacing)
+    }
+
     var adapter: Adapter<*>? = null
         set(value) {
             field?.unregisterAdapterDataObserver(mObserver)
@@ -33,19 +39,13 @@ class AutoPagerView : ViewGroup {
     private var lastWidthMeasureSpec: Int = 0
     private var lastHeightMeasureSpec: Int = 0
 
-    /**
-     * 获取行数目
-     *
-     * @return 行数目
-     */
-    var numRows = 0
-        private set
-    private val mNumLayoutRows = 0
-    private val mNumColumns = ArrayList<Int>()
     private var mIsAttachToWindow = false
     private var mAdapterUpdateDuringMeasure = false
     private val mObserver = MtObserver()
-    private var isLayouting = false
+    private var isDuringLayout = false
+    private var firstMeasureEnd = true
+
+    open class ViewHolder internal constructor(val itemView: View)
 
     constructor(context: Context) : super(context) {
         initView(context, null, 0)
@@ -64,14 +64,17 @@ class AutoPagerView : ViewGroup {
         initView(context, attrs, defStyleAttr)
     }
 
+    private fun logOf(s: String) {
+        Log.d("AutoPagerView", s)
+    }
+
     private fun initView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) {
         val a = context.obtainStyledAttributes(attrs, ATTRS, defStyleAttr, 0)
         val n = a.indexCount
         var horizontalSpacing = 0
         var verticalSpacing = 0
         for (i in 0 until n) {
-            val attr = a.getIndex(i)
-            when (attr) {
+            when (val attr = a.getIndex(i)) {
                 0 -> horizontalSpacing = a.getDimensionPixelSize(attr, horizontalSpacing)
                 1 -> verticalSpacing = a.getDimensionPixelSize(attr, verticalSpacing)
             }
@@ -123,9 +126,8 @@ class AutoPagerView : ViewGroup {
         mIsAttachToWindow = false
     }
 
-    private var measureStartTime = 0L
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        measureStartTime = System.currentTimeMillis()
+        val measureStartTime = System.currentTimeMillis()
         var itemsWidth = 0
         var itemsHeight = 0
         val paddingLeft = paddingLeft
@@ -148,10 +150,6 @@ class AutoPagerView : ViewGroup {
         setMeasuredDimension(resolveSize(itemsWidth, widthMeasureSpec),
                 resolveSize(itemsHeight, heightMeasureSpec))
         logOf("onMeasure: ${System.currentTimeMillis() - measureStartTime}")
-    }
-
-    private fun logOf(s: String) {
-        Log.d("autopagers", s)
     }
 
     private fun checkFirstMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -185,8 +183,6 @@ class AutoPagerView : ViewGroup {
 
     private fun segmentAt(i: Int): Segment? = segments.getOrNull(i)
 
-
-    private var firstMeasureEnd = true
     private fun preMeasureDataRange(measureAll: Boolean = false, pageIndex: Int, widthMeasureSpec: Int, heightMeasureSpec: Int, rangeStart: Int, rangeEnd: Int) {
         var page = pageIndex
         var dataIndex = rangeStart
@@ -213,14 +209,10 @@ class AutoPagerView : ViewGroup {
     private fun measureOnePage(measureAll: Boolean, segment: Segment, widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val paddingTop = paddingTop
         val paddingBottom = paddingBottom
-        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
-        val widthSize = MeasureSpec.getSize(widthMeasureSpec)
-        val heightMode = MeasureSpec.getSize(heightMeasureSpec)
         val heightSize = MeasureSpec.getSize(heightMeasureSpec)
         var collectHeight = 0
         val collectWidth = 0
         var rows = 0
-        mNumColumns.clear()
         val childCount = segment.measureSize
         if (childCount > 0) {
             val maxItemsHeight = heightSize - paddingTop - paddingBottom
@@ -229,7 +221,7 @@ class AutoPagerView : ViewGroup {
                 val childHeight: Int = if (measureAll) {
                     adapter?.measureHeightAt(index) ?: 0
                 } else {
-                    val child = getViewOf(index) ?: continue
+                     val child = getViewOf(index) ?: continue
                     if (isViewGone(child)) continue
                     measureChild(child, widthMeasureSpec, heightMeasureSpec)
                     child.measuredHeight
@@ -289,14 +281,14 @@ class AutoPagerView : ViewGroup {
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        if (isLayouting) return
-        isLayouting = true
+        if (isDuringLayout) return
+        isDuringLayout = true
         getCurSegment()?.let { cur: Segment ->
             val pre = segmentAt(curSegIndex - 1)
             layoutChunk(cur, pre)
             onLayoutFinish()
         }
-        isLayouting = false
+        isDuringLayout = false
     }
 
     private fun onLayoutFinish() {
@@ -313,7 +305,7 @@ class AutoPagerView : ViewGroup {
         val oldIndex = curSegIndex
         val s = getCurSegment()
         val lastItemSequence = s?.end ?: 0
-        val total = totalPage()
+        val total = getTotalPage()
         if (index <= 0) {
             curSegIndex = 0
         } else if (index >= total && lastItemSequence == getDataSize()) {
@@ -328,9 +320,9 @@ class AutoPagerView : ViewGroup {
 
     fun getCurrentIndex() = curSegIndex
 
-    fun totalPage() = segments.size
+    fun getTotalPage() = segments.size
 
-    protected fun layoutChunk(segment: Segment, pre: Segment?) {
+    private fun layoutChunk(segment: Segment, pre: Segment?) {
         val startTime = System.currentTimeMillis()
         removeAllViews()
         val paddingStart = paddingLeft
@@ -382,11 +374,7 @@ class AutoPagerView : ViewGroup {
         segment.end = segment.start + segment.size
         logOf("onLayout: ${System.currentTimeMillis() - startTime}")
     }
-    /**
-     * 获取水平间距
-     *
-     * @return 水平间距
-     */
+
     /**
      * 设置水平间距
      *
@@ -398,11 +386,7 @@ class AutoPagerView : ViewGroup {
             mHorizontalSpacing = pixelSize
             requestLayout()
         }
-    /**
-     * 获取垂直间距
-     *
-     * @return 垂直间距
-     */
+
     /**
      * 设置垂直间距
      *
@@ -415,18 +399,6 @@ class AutoPagerView : ViewGroup {
             requestLayout()
         }
 
-    /**
-     * 获取某一行列数目
-     *
-     * @param index 行号
-     * @return 列数目
-     */
-    fun getNumColumns(index: Int): Int {
-        val numColumns = -1
-        return if (index < 0 || index >= mNumColumns.size) {
-            numColumns
-        } else mNumColumns[index]
-    }
 
     /**
      * Per-child layout information associated with AutoExcludeLayout.
@@ -442,7 +414,7 @@ class AutoPagerView : ViewGroup {
         constructor(source: LayoutParams) : super(source)
     }
 
-    private inner class MtObserver : AdapterDataObserver() {
+    private inner class MtObserver : CellAdapterDataObserver() {
         override fun onChanged() {
             requestLayout()
         }
@@ -472,17 +444,17 @@ class AutoPagerView : ViewGroup {
     abstract class Adapter<VH : ViewHolder> {
         abstract fun totalDataSize(): Int
 
-        private val mObservable = AdapterDataObservable()
+        private val mObservable = CellAdapterDataObservable()
         private val viewHolderSparseArray = SparseArray<VH>()
 
         abstract fun onCreateViewHolderAt(index: Int, parent: ViewGroup): VH
 
         //        <editor-fold desc="AdapterDataObserver">
-        fun registerAdapterDataObserver(observer: AdapterDataObserver) {
+        fun registerAdapterDataObserver(observer: CellAdapterDataObserver) {
             mObservable.registerObserver(observer)
         }
 
-        fun unregisterAdapterDataObserver(observer: AdapterDataObserver) {
+        fun unregisterAdapterDataObserver(observer: CellAdapterDataObserver) {
             mObservable.unregisterObserver(observer)
         }
 
@@ -526,12 +498,5 @@ class AutoPagerView : ViewGroup {
         abstract fun bindData2ViewHolder(index: Int, vh: ViewHolder, parent: ViewGroup)
         abstract fun measureHeightAt(index: Int): Int
 
-    }
-
-    open class ViewHolder internal constructor(val itemView: View)
-    companion object {
-        private const val MAX_PER_MEASURE_CNT = 10
-        private val ATTRS = intArrayOf(android.R.attr.horizontalSpacing,
-                android.R.attr.verticalSpacing)
     }
 }

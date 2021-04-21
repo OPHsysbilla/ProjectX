@@ -18,7 +18,6 @@ package am.project.x.business.widgets.wraplayout
 import am.appcompat.app.BaseActivity
 import am.project.x.R
 import am.widget.wraplayout.RandomUtils
-import am.widget.wraplayout.WrapLayout
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -28,7 +27,7 @@ import android.widget.SeekBar
 import android.widget.SeekBar.OnSeekBarChangeListener
 import autoexclue.adapter.AutoPageAdapter
 import autoexclue.item.AbstractCellItem
-import am.widget.wraplayout.item.ExerciseCellItem
+import am.widget.wraplayout.item.TestCellItem
 import am.widget.wraplayout.item.GroupTitleCellItem
 import autoexclue.AutoPagerView
 import kotlinx.android.synthetic.main.activity_wraplayout.*
@@ -84,7 +83,7 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
             val size = RandomUtils.nextInt(1, 10)
             a.add(GroupTitleCellItem(i, "Group Title ${i}: " + RandomUtils.nextInt(0, 99999)))
             for (j in 0 until size) {
-                a.add(ExerciseCellItem(j, "belong Group${i} : " + RandomUtils.nextDouble()))
+                a.add(TestCellItem(j, "belong Group${i} : " + RandomUtils.nextDouble()))
             }
         }
         adapter.addDataList(a)

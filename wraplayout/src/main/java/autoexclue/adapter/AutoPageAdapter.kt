@@ -7,7 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
 import autoexclue.AutoPagerView
-import autoexclue.item.IViewHolderCreator
+import autoexclue.item.IPagerViewHolderCreator
 import autoexclue.item.AbstractCellItem
 
 class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
@@ -54,7 +54,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
 
     //<editor-fold desc="ViewHolderFactory">
     class ViewHolderFactory {
-        private val creatorSparseArray = SparseArray<Pair<Int, IViewHolderCreator<*>>?>()
+        private val creatorSparseArray = SparseArray<Pair<Int, IPagerViewHolderCreator<*>>?>()
         fun register(cement: AbstractCellItem<*>) {
             val viewType = cement.viewType
             if (viewType == View.NO_ID) {
@@ -63,7 +63,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
             if (creatorSparseArray[viewType] == null) {
                 creatorSparseArray.put(
                         viewType,
-                        android.util.Pair.create(cement.layoutRes, cement.viewHolderCreator)
+                        android.util.Pair.create(cement.layoutRes, cement.pagerViewHolderCreator)
                 )
             }
         }

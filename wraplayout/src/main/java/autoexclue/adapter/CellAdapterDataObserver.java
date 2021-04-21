@@ -2,7 +2,7 @@ package autoexclue.adapter;
 
 import androidx.annotation.Nullable;
 
-public abstract class AdapterDataObserver {
+public abstract class CellAdapterDataObserver {
     public void onChanged() {
         // Do nothing
     }

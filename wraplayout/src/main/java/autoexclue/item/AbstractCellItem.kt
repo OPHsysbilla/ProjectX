@@ -9,7 +9,7 @@ import autoexclue.AutoPagerView
  */
 abstract class AbstractCellItem<T: AutoPagerView.ViewHolder> {
 
-    abstract val viewHolderCreator: IViewHolderCreator<T>
+    abstract val pagerViewHolderCreator: IPagerViewHolderCreator<T>
 
     @get:LayoutRes
     abstract val layoutRes: Int
