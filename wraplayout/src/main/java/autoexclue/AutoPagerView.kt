@@ -30,6 +30,9 @@ class AutoPagerView : ViewGroup {
     private var mVerticalSpacing = 0
     private var mHorizontalSpacing = 0
 
+    private var lastWidthMeasureSpec: Int = 0
+    private var lastHeightMeasureSpec: Int = 0
+
     /**
      * 获取行数目
      *
@@ -39,7 +42,6 @@ class AutoPagerView : ViewGroup {
         private set
     private val mNumLayoutRows = 0
     private val mNumColumns = ArrayList<Int>()
-    private var mGravity = GRAVITY_TOP
     private var mIsAttachToWindow = false
     private var mAdapterUpdateDuringMeasure = false
     private val mObserver = MtObserver()
@@ -75,16 +77,14 @@ class AutoPagerView : ViewGroup {
             }
         }
         a.recycle()
-        val custom = context.obtainStyledAttributes(attrs, R.styleable.AutoExcludeLayout)
+        val custom = context.obtainStyledAttributes(attrs, R.styleable.AutoPagerView)
         horizontalSpacing = custom.getDimensionPixelSize(
-                R.styleable.AutoExcludeLayout_AEL_HorizontalSpacing, horizontalSpacing)
+                R.styleable.AutoPagerView_APV_HorizontalSpacing, horizontalSpacing)
         verticalSpacing = custom.getDimensionPixelSize(
-                R.styleable.AutoExcludeLayout_AEL_VerticalSpacing, verticalSpacing)
-        val gravity = custom.getInt(R.styleable.AutoExcludeLayout_AEL_Gravity, GRAVITY_TOP)
+                R.styleable.AutoPagerView_APV_VerticalSpacing, verticalSpacing)
         custom.recycle()
         mHorizontalSpacing = horizontalSpacing
         mVerticalSpacing = verticalSpacing
-        mGravity = gravity
     }
 
     override fun generateLayoutParams(attrs: AttributeSet): LayoutParams {
@@ -147,11 +147,12 @@ class AutoPagerView : ViewGroup {
         itemsHeight = Math.max(paddingTop + itemsHeight + paddingBottom, suggestedMinimumHeight)
         setMeasuredDimension(resolveSize(itemsWidth, widthMeasureSpec),
                 resolveSize(itemsHeight, heightMeasureSpec))
-        Log.d("autopagers", "onMeasure: ${System.currentTimeMillis() - measureStartTime}")
+        logOf("onMeasure: ${System.currentTimeMillis() - measureStartTime}")
     }
 
-    private var lastWidthMeasureSpec: Int = 0
-    private var lastHeightMeasureSpec: Int = 0
+    private fun logOf(s: String) {
+        Log.d("autopagers", s)
+    }
 
     private fun checkFirstMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         preMeasurePage(pageWantToMeasure = curSegIndex,
@@ -300,7 +301,7 @@ class AutoPagerView : ViewGroup {
 
     private fun onLayoutFinish() {
         val c = getCurSegment()
-        Log.d("autopagers", "onLayoutFinish: page index: ${curSegIndex + 1}/${segments.size}， " +
+        logOf("onLayoutFinish: page index: ${curSegIndex + 1}/${segments.size}， " +
                 "cur page: range [${c?.start} - ${c?.end}) = curItemNum: ${c?.size} / totalItemNum: ${getDataSize()}")
         callbackPageIndex?.invoke("${curSegIndex + 1}/${segments.size}")
     }
@@ -341,8 +342,7 @@ class AutoPagerView : ViewGroup {
         val end = Math.min(start + MAX_PER_MEASURE_CNT, getDataSize())
         var dataIndex = start
         while (dataIndex < end) {
-            // row++
-            val numColumn = 1 //mNumColumns.get(row);
+            val numColumn = 1
             var childMaxHeight = 0
             var startX = paddingStart - mHorizontalSpacing
             var column = 0
@@ -356,10 +356,6 @@ class AutoPagerView : ViewGroup {
                 val lp = childView.layoutParams as LayoutParams
                 startX += mHorizontalSpacing
                 val startY = columnTop + mVerticalSpacing
-                //                childView.layout(startX, startY, startX + childWidth, startY + childHeight);
-
-//                startX += childWidth;
-//                if(!lp.isWithinValidLayout) continue;
                 if (startY + childHeight > measuredHeight) {
                     lp.isInvisibleOutValidLayout = true
                     childView.visibility = INVISIBLE
@@ -384,7 +380,7 @@ class AutoPagerView : ViewGroup {
         segment.size = segment.layoutRows
         segment.measureRows = segment.layoutRows
         segment.end = segment.start + segment.size
-        Log.d("autopagers", "onLayout: ${System.currentTimeMillis() - startTime}")
+        logOf("onLayout: ${System.currentTimeMillis() - startTime}")
     }
     /**
      * 获取水平间距
@@ -431,59 +427,22 @@ class AutoPagerView : ViewGroup {
             numColumns
         } else mNumColumns[index]
     }
-    /**
-     * 获取子项对齐模式
-     *
-     * @return 对齐模式
-     */
-    /**
-     * 设置子项对齐模式
-     *
-     * @param gravity 对齐模式
-     */
-    var gravity: Int
-        get() = mGravity
-        set(gravity) {
-            if (gravity != GRAVITY_TOP && gravity != GRAVITY_CENTER && gravity != GRAVITY_BOTTOM) return
-            mGravity = gravity
-            requestLayout()
-        }
 
     /**
      * Per-child layout information associated with AutoExcludeLayout.
      */
     class LayoutParams : MarginLayoutParams {
         var mViewHolder: ViewHolder? = null
-        /**
-         * 获取布局
-         *
-         * @return 布局
-         */
-        /**
-         * 设置布局
-         *
-         * @param gravity 布局
-         */
-        var gravity = GRAVITY_PARENT
         var isWithinValidLayout = false
         var isInvisibleOutValidLayout = false
 
-        constructor(c: Context, attrs: AttributeSet?) : super(c, attrs) {
-            var gravity = GRAVITY_PARENT
-            val custom = c.obtainStyledAttributes(attrs, R.styleable.AutoExcludeLayout_Layout)
-            gravity = custom.getInt(R.styleable.AutoExcludeLayout_Layout_AEL_Layout_gravity, gravity)
-            custom.recycle()
-            this.gravity = gravity
-        }
-
-        constructor(width: Int, height: Int) : super(width, height) {}
-        constructor(source: ViewGroup.LayoutParams?) : super(source) {}
-        constructor(source: LayoutParams) : super(source) {
-            gravity = source.gravity
-        }
+        constructor(c: Context, attrs: AttributeSet?) : super(c, attrs)
+        constructor(width: Int, height: Int) : super(width, height)
+        constructor(source: ViewGroup.LayoutParams?) : super(source)
+        constructor(source: LayoutParams) : super(source)
     }
 
-    private inner class MtObserver internal constructor() : AdapterDataObserver() {
+    private inner class MtObserver : AdapterDataObserver() {
         override fun onChanged() {
             requestLayout()
         }
@@ -562,6 +521,7 @@ class AutoPagerView : ViewGroup {
         fun notifyItemRangeRemoved(positionStart: Int, itemCount: Int) {
             mObservable.notifyItemRangeRemoved(positionStart, itemCount)
         }
+        //        </editor-fold desc="AdapterDataObserver">
 
         abstract fun bindData2ViewHolder(index: Int, vh: ViewHolder, parent: ViewGroup)
         abstract fun measureHeightAt(index: Int): Int
@@ -571,10 +531,6 @@ class AutoPagerView : ViewGroup {
     open class ViewHolder internal constructor(val itemView: View)
     companion object {
         private const val MAX_PER_MEASURE_CNT = 10
-        const val GRAVITY_PARENT = -1 // 使用全局对齐方案
-        const val GRAVITY_TOP = 0 // 子项顶部对齐
-        const val GRAVITY_CENTER = 1 // 子项居中对齐
-        const val GRAVITY_BOTTOM = 2 // 子项底部对齐
         private val ATTRS = intArrayOf(android.R.attr.horizontalSpacing,
                 android.R.attr.verticalSpacing)
     }

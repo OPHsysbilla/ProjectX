@@ -95,11 +95,11 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
 
     // Listener
     override fun onCheckedChanged(group: RadioGroup, checkedId: Int) {
-        when (checkedId) {
-            R.id.wl_rb_top -> mVContent?.gravity = WrapLayout.GRAVITY_TOP
-            R.id.wl_rb_center -> mVContent?.gravity = WrapLayout.GRAVITY_CENTER
-            R.id.wl_rb_bottom -> mVContent?.gravity = WrapLayout.GRAVITY_BOTTOM
-        }
+//        when (checkedId) {
+//            R.id.wl_rb_top -> mVContent?.gravity = WrapLayout.GRAVITY_TOP
+//            R.id.wl_rb_center -> mVContent?.gravity = WrapLayout.GRAVITY_CENTER
+//            R.id.wl_rb_bottom -> mVContent?.gravity = WrapLayout.GRAVITY_BOTTOM
+//        }
     }
 
     override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
