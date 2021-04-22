@@ -1,5 +1,6 @@
 package com.fenbi.megrez.app.exercisescope.flowlayout
 
+import am.project.x.R
 import android.app.Dialog
 import android.content.Context
 import android.os.Bundle
@@ -8,10 +9,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.annotation.StyleRes
+import autoexclue.AutoPagerView
+import autoexclue.adapter.AutoPageAdapter
 import com.fenbi.megrez.app.exercisescope.cellitem.ChoiceGroupCellItem
-import com.fenbi.megrez.app.megrezView.autopager.AutoPagerView
-import com.fenbi.megrez.app.megrezView.autopager.adapter.AutoPageAdapter
-import com.yuanfudao.android.megrez.exercisescope.R
 
 /**
  * Created by lei.jialin on 2021/4/22
@@ -63,7 +63,7 @@ class ChoiceDialog @JvmOverloads constructor(
 
     private fun initView(root: ViewGroup) {
         autoPager = root.findViewById(R.id.auto_pager_layout)
-        refreshSetting()
+        autoPager.adapter = adapter
     }
 
     private fun refreshSetting() {
@@ -77,6 +77,11 @@ class ChoiceDialog @JvmOverloads constructor(
         adapter.clearData()
         adapter.addDataList(cells)
         adapter.notifyDataSetChanged()
+    }
+
+    override fun show() {
+        refreshSetting()
+        super.show()
     }
 
     private fun onCellSelect(groupNum: Int, indexInList: Int, choice: ChoiceTag<String>?) {

@@ -1,12 +1,12 @@
 package autoexclue.adapter
 
+import android.content.Context
 import android.util.Pair
 import android.util.SparseArray
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
-import androidx.recyclerview.widget.RecyclerView
 import autoexclue.AutoPagerView
 import autoexclue.click.EventAnchor
 import autoexclue.click.EventAnchorHelper
@@ -100,7 +100,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
     }
 
     var callbackHeight: ((dataIndex: Int) -> Int)? = null
-    override fun measureHeightAt(index: Int): Int = displyItems.getOrNull(index)?.firstAssumeMeasureHeight()
+    override fun measureHeightAt(context: Context, index: Int): Int = displyItems.getOrNull(index)?.firstAssumeMeasureHeight(context)
             ?: 0
     //</editor-fold>
 

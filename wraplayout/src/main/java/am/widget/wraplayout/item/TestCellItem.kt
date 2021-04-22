@@ -1,6 +1,7 @@
 package am.widget.wraplayout.item
 
 import am.widget.wraplayout.R
+import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -19,7 +20,7 @@ class TestCellItem(private val index: Int, val str: String?) : AbstractCellItem<
         holder.tvLastExercise.text = "第%d个".format(Locale.CHINA, index)
     }
 
-    override fun firstAssumeMeasureHeight(): Int = 100
+    override fun firstAssumeMeasureHeight(context: Context): Int = 100
 
     override val pagerViewHolderCreator: IPagerViewHolderCreator<ViewHolder> = pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }
     override val layoutRes: Int

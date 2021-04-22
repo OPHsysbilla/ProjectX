@@ -9,11 +9,11 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
 
-import com.yuanfudao.android.megrez.exercisescope.R;
-
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import am.project.x.R;
 
 /**
  * Created by zhy on 15/9/10.

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="123dp"
+    android:layout_width="wrap_content"
     android:id="@+id/tv_text"
     android:layout_height="wrap_content"
     android:background="@drawable/selector_radius_30dp_white_stroke"
@@ -9,8 +9,9 @@
     android:gravity="center"
     android:includeFontPadding="false"
     android:maxLines="1"
+    android:paddingLeft="20dp"
     android:paddingTop="10.5dp"
+    android:paddingRight="20dp"
     android:paddingBottom="10.5dp"
     android:textColor="@color/black_select_2_white_single_color"
-    android:textSize="21sp"
     tools:text="数学班" />

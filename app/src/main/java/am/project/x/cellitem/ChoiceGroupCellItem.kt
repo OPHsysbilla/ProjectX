@@ -1,15 +1,14 @@
 package com.fenbi.megrez.app.exercisescope.cellitem
 
+import am.project.x.R
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.fenbi.megrez.app.devkit.dp2px
+import autoexclue.item.IPagerViewHolderCreator
+import autoexclue.item.pagerViewHolderCreatorEx
 import com.fenbi.megrez.app.exercisescope.flowlayout.ChoiceGroup
 import com.fenbi.megrez.app.exercisescope.flowlayout.ChoiceTag
-import com.fenbi.megrez.app.megrezView.autopager.item.IPagerViewHolderCreator
-import com.fenbi.megrez.app.megrezView.autopager.item.pagerViewHolderCreatorEx
-import com.yuanfudao.android.megrez.exercisescope.R
 
 /**
  * Created by lei.jialin on 2021/4/22
@@ -26,12 +25,12 @@ class ChoiceGroupCellItem(
             .inflate(R.layout.exercisescope_single_choice_select, viewGroup, false)
     }
 
-    override fun firstAssumeMeasureHeight(context: Context): Int = context.dp2px(60)
+    override fun firstAssumeMeasureHeight(context: Context): Int = 60
 
-    override val pagerViewHolderCreator: IPagerViewHolderCreator<ViewHolder> =
+    override val pagerViewHolderCreator: IPagerViewHolderCreator<ChoiceGroupCellItem.ViewHolder> =
         pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }
     override val layoutRes: Int
         get() = R.layout.exercisescope_choicegroup_item_flowlayout
 
-    class ViewHolder internal constructor(itemView: View) : BaseGroupCellItem.ViewHolder(itemView)
+    class ViewHolder constructor(itemView: View) : BaseGroupCellItem.ViewHolder(itemView)
 }

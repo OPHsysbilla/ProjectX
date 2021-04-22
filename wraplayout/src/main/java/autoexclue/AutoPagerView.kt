@@ -8,7 +8,6 @@ import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
-import androidx.recyclerview.widget.RecyclerView
 import autoexclue.adapter.CellAdapterDataObservable
 import autoexclue.adapter.CellAdapterDataObserver
 import java.util.*
@@ -48,7 +47,7 @@ open class AutoPagerView : ViewGroup {
     private var isDuringLayout = false
     private var firstMeasureEnd = true
 
-    open class ViewHolder internal constructor(val itemView: View) {
+    open class ViewHolder constructor(val itemView: View) {
         var mPosition = -1
     }
 
@@ -224,7 +223,7 @@ open class AutoPagerView : ViewGroup {
             val end = Math.min(segment.measureEnd, getDataSize())
             for (index in segment.start until end) {
                 val childHeight: Int = if (measureAll) {
-                    adapter?.measureHeightAt(index) ?: 0
+                    adapter?.measureHeightAt(context, index) ?: 0
                 } else {
                      val child = getViewOf(index) ?: continue
                     if (isViewGone(child)) continue
@@ -507,7 +506,8 @@ open class AutoPagerView : ViewGroup {
         //        </editor-fold desc="AdapterDataObserver">
 
         abstract fun bindData2ViewHolder(index: Int, vh: ViewHolder, parent: ViewGroup)
-        abstract fun measureHeightAt(index: Int): Int
+
+        abstract fun measureHeightAt(context: Context, index: Int): Int
 
     }
 }

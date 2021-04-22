@@ -3,6 +3,8 @@ package am.project.x.flowlayout;
 import android.util.Log;
 import android.view.View;
 
+import com.fenbi.megrez.app.exercisescope.flowlayout.ChoiceGroup;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;

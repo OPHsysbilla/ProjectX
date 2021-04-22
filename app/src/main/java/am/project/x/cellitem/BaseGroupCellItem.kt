@@ -1,14 +1,14 @@
 package com.fenbi.megrez.app.exercisescope.cellitem
 
+import am.project.x.R
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import autoexclue.AutoPagerView
+import autoexclue.item.AbstractCellItem
 import com.fenbi.megrez.app.exercisescope.flowlayout.ChoiceGroup
 import com.fenbi.megrez.app.exercisescope.flowlayout.ChoiceTag
 import com.fenbi.megrez.app.megrezView.FixedFlowLayout
-import com.fenbi.megrez.app.megrezView.autopager.AutoPagerView
-import com.fenbi.megrez.app.megrezView.autopager.item.AbstractCellItem
-import com.yuanfudao.android.megrez.exercisescope.R
 
 /**
  * Created by lei.jialin on 2021/4/22
@@ -22,7 +22,7 @@ abstract class BaseGroupCellItem<T, VH : BaseGroupCellItem.ViewHolder>(
 
     override fun onBindViewHolder(holder: VH, parent: ViewGroup) {
         holder.tvGroupTitle.text = choiceGroup.groupTitle
-        holder.tvGroupTitle.visibility = if (choiceGroup.groupTitle.isNullOrEmpty()) View.GONE else View.GONE
+        holder.tvGroupTitle.visibility = if (choiceGroup.groupTitle.isNullOrEmpty()) View.GONE else View.VISIBLE
         refreshFlowLayout(holder.flowLayout, choiceGroup.choices)
     }
 
@@ -54,10 +54,7 @@ abstract class BaseGroupCellItem<T, VH : BaseGroupCellItem.ViewHolder>(
 
     abstract fun createView(viewGroup: ViewGroup): View
 
-    override val layoutRes: Int
-        get() = R.layout.exercisescope_choicegroup_item_flowlayout
-
-    abstract class ViewHolder internal constructor(itemView: View) : AutoPagerView.ViewHolder(itemView) {
+    abstract class ViewHolder constructor(itemView: View) : AutoPagerView.ViewHolder(itemView) {
         val tvGroupTitle: TextView = itemView.findViewById(R.id.title)
         val flowLayout: FixedFlowLayout = itemView.findViewById(R.id.flow_layout)
     }

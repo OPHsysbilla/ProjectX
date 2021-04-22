@@ -20,4 +20,25 @@
         <attr name="APV_HorizontalSpacing" format="dimension" />
         <attr name="APV_VerticalSpacing" format="dimension" />
     </declare-styleable>
+    <declare-styleable name="FixedFlowLayout">
+        <attr name="FFL_horizontal_spacing" format="dimension" />
+        <attr name="FFL_vertical_spacing" format="dimension" />
+        <attr name="FFL_item_gravity">
+            <enum name="top" value="0" />
+            <enum name="bottom" value="1" />
+            <enum name="center" value="2" />
+        </attr>
+        <attr name="FFL_item_align">
+            <enum name="left" value="3" />
+            <enum name="center" value="4" />
+            <enum name="right" value="5" />
+            <enum name="center_left" value="6" />
+            <enum name="center_right" value="7" />
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="FixedFlowLayout_LayoutParams">
+        <attr name="FFL_layout_break_line" format="boolean" />
+        <attr name="FFL_layout_horizontal_spacing" format="dimension" />
+    </declare-styleable>
 </resources>

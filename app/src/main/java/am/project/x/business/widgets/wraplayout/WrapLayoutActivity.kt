@@ -30,7 +30,9 @@ import autoexclue.item.AbstractCellItem
 import am.widget.wraplayout.item.TestCellItem
 import am.widget.wraplayout.item.GroupTitleCellItem
 import android.util.Log
+import android.widget.Button
 import autoexclue.AutoPagerView
+import com.fenbi.megrez.app.exercisescope.flowlayout.ChoiceDialog
 import kotlinx.android.synthetic.main.activity_wraplayout.*
 import java.util.*
 
@@ -40,6 +42,10 @@ import java.util.*
 class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGroup.OnCheckedChangeListener, OnSeekBarChangeListener {
     private var mVContent: AutoPagerView? = null
     private var other: View? = null
+    private lateinit var choiceBtn: Button
+    private val dialog by lazy {
+        ChoiceDialog(this)
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setSupportActionBar(R.id.wl_toolbar)
@@ -49,6 +55,10 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
         val horizontal = findViewById<SeekBar>(R.id.wl_sb_horizontal)
         val vertical = findViewById<SeekBar>(R.id.wl_sb_vertical)
         val height = findViewById<SeekBar>(R.id.wl_sb_height)
+        choiceBtn = findViewById<Button>(R.id.choice_button)
+        choiceBtn.setOnClickListener {
+            dialog.show()
+        }
         gravity.setOnCheckedChangeListener(this)
         gravity.check(R.id.wl_rb_top)
         horizontal.setOnSeekBarChangeListener(this)
@@ -73,7 +83,7 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
             pager_index.setPageDecorateText(it)
         }
         adapter.setOnItemClickListener(object : AutoPageAdapter.OnItemClickListener {
-            override fun onClick(position: Int, itemView: View, viewHolder: AutoPagerView.ViewHolder, model: AbstractCellItem<*>) {
+            override fun onClick(position: Int, itemView: View, viewHolder: AutoPagerView.ViewHolder, model: AbstractCellItem<*>?) {
                 val title = (model as? TestCellItem)?.str ?:""
                 Log.d("autopagers", " onClick post: $position, $title")
             }

@@ -6,11 +6,11 @@ import android.util.AttributeSet;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.yuanfudao.android.megrez.exercisescope.R;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import am.project.x.R;
 
 public class FlowLayout extends ViewGroup {
     private static final String TAG = "FlowLayout";

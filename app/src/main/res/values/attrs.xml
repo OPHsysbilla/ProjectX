@@ -22,4 +22,8 @@
         <attr name="cpShadowsCircleRadius" format="dimension" />
         <attr name="cpElevation" format="dimension" />
     </declare-styleable>
+    <declare-styleable name="TagFlowLayout">
+        <attr name="TFL_max_select" format="integer" />
+        <attr name="TFL_tag_gravity" format="integer" />
+    </declare-styleable>
 </resources>

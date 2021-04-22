@@ -1,6 +1,7 @@
 package am.widget.wraplayout.item
 
 import am.widget.wraplayout.R
+import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -19,7 +20,7 @@ class GroupTitleCellItem(private val index: Int, private val str: String?) : Abs
 
     }
 
-    override fun firstAssumeMeasureHeight(): Int = 33
+    override fun firstAssumeMeasureHeight(context: Context): Int = 33
 
     override val pagerViewHolderCreator: IPagerViewHolderCreator<ViewHolder> = pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }
     override val layoutRes: Int
