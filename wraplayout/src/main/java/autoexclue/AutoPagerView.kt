@@ -45,7 +45,9 @@ open class AutoPagerView : ViewGroup {
     private var isDuringLayout = false
     private var firstMeasureEnd = true
 
-    open class ViewHolder internal constructor(val itemView: View)
+    open class ViewHolder internal constructor(val itemView: View) {
+        var mPosition = -1
+    }
 
     constructor(context: Context) : super(context) {
         initView(context, null, 0)
@@ -257,6 +259,7 @@ open class AutoPagerView : ViewGroup {
             vh = obtainViewHolder(index)
             vhCache.put(index, vh)
         }
+        vh.mPosition = index
         adapter?.bindData2ViewHolder(index, vh, this)
         return vh.itemView
     }

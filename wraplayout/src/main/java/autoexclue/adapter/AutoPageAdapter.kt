@@ -6,18 +6,30 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.LayoutRes
+import androidx.recyclerview.widget.RecyclerView
 import autoexclue.AutoPagerView
-import autoexclue.item.IPagerViewHolderCreator
+import autoexclue.click.EventAnchor
+import autoexclue.click.EventAnchorHelper
+import autoexclue.click.OnClickEventAnchor
+import autoexclue.click.OnLongClickEventAnchor
 import autoexclue.item.AbstractCellItem
+import autoexclue.item.IPagerViewHolderCreator
 
 class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
+    private val eventHookHelper: EventAnchorHelper<AutoPagerView.ViewHolder> = EventAnchorHelper()
+    private var isAttached: Boolean = false
+
     //        </editor-fold>
     var displyItems = CellList()
 
     override fun onCreateViewHolderAt(index: Int, parent: ViewGroup): AutoPagerView.ViewHolder {
         val item = displyItems.getOrNull(index) ?: throw IllegalAccessException(" out of box~ ")
-        return displyItems.viewHolderFactory.create(item.viewType, parent)
+        val viewHolder =  displyItems.viewHolderFactory.create(item.viewType, parent)
+        viewHolder.mPosition = index
+        eventHookHelper.bind(viewHolder, this)
+        return viewHolder
     }
+
     fun clearData() {
         displyItems.clear()
     }
@@ -27,7 +39,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
         displyItems.addAll(cements)
     }
 
-    override fun totalDataSize(): Int =  displyItems.size
+    override fun totalDataSize(): Int = displyItems.size
 
     class CellList : ArrayList<AbstractCellItem<*>>() {
         val viewHolderFactory = ViewHolderFactory()
@@ -86,15 +98,137 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
             }
         }
     }
-    var callbackHeight: ((dataIndex:Int) -> Int)? = null
-    override fun measureHeightAt(index: Int): Int
-       =  displyItems.getOrNull(index)?.firstAssumeMeasureHeight() ?: 0
 
+    var callbackHeight: ((dataIndex: Int) -> Int)? = null
+    override fun measureHeightAt(index: Int): Int = displyItems.getOrNull(index)?.firstAssumeMeasureHeight()
+            ?: 0
+    //</editor-fold>
 
     override fun bindData2ViewHolder(index: Int, vh: AutoPagerView.ViewHolder, parent: ViewGroup) {
-       val item = displyItems.getOrNull(index) as? AbstractCellItem<AutoPagerView.ViewHolder> ?: return
+        val item = displyItems.getOrNull(index) as? AbstractCellItem<AutoPagerView.ViewHolder>
+                ?: return
         item.onBindViewHolder(vh, parent)
     }
 
+    fun indexOf(cellItem: AbstractCellItem<*>): Int {
+        return displyItems.indexOf(cellItem)
+    }
+
+    fun dataAt(index: Int) = displyItems.getOrNull(index)
+
+
+    //</editor-fold>
+
+    //<editor-fold desc="Event Hook">
+    fun addEventAnchor(
+            eventHook: EventAnchor<in AutoPagerView.ViewHolder>) {
+        if (isAttached) {
+            throw IllegalAccessException("addEventAnchor should be called before view is attached, normally before setAdapter")
+        }
+        eventHookHelper.add(eventHook)
+    }
+
+    fun removeEventAnchor(
+            eventHook: EventAnchor<in AutoPagerView.ViewHolder>) {
+        eventHookHelper.remove(eventHook)
+    }
+    //</editor-fold desc="Event Hook">
+
+    //<editor-fold desc="OnClickListener">
+    private var onItemClickListener: OnItemClickListener? = null
+    private var clickEventAnchor: EventAnchor<AutoPagerView.ViewHolder>? = null
+    private var onItemLongClickListener: OnItemLongClickListener? = null
+    private var longClickEventAnchor: OnLongClickEventAnchor<AutoPagerView.ViewHolder>? = null
+
+    private fun addOnItemClickEventHook() {
+        clickEventAnchor?.let {
+            removeEventAnchor(it)
+        }
+        val click = object :
+                OnClickEventAnchor<AutoPagerView.ViewHolder>(AutoPagerView.ViewHolder::class.java) {
+
+            override fun onBindMany(viewHolder: AutoPagerView.ViewHolder): List<View?>? {
+                return listOf(viewHolder.itemView)
+            }
+
+            override fun onClick(position: Int, view: View, viewHolder: AutoPagerView.ViewHolder, rawData: AbstractCellItem<*>?) {
+                onItemClickListener?.onClick(position, view, viewHolder, rawData)
+            }
+
+        }
+        addEventAnchor(click)
+        clickEventAnchor = click
+    }
+
+    /**
+     * Register a callback to be invoked when [.models] are clicked.
+     * If the view of this model is not clickable, it will not trigger callback.
+     *     * @throws IllegalStateException this method must be called before
+     * [RecyclerView.setAdapter]
+     */
+    fun setOnItemClickListener(onItemClickListener: OnItemClickListener?) {
+        check(!(isAttached && clickEventAnchor == null && onItemClickListener != null)) {
+            "setOnItemClickListener must be called before the setAdapter"
+        }
+        if (!isAttached && clickEventAnchor == null) {
+            addOnItemClickEventHook()
+        }
+        this.onItemClickListener = onItemClickListener
+    }
+
+    private fun addOnItemLongClickEventHook() {
+        longClickEventAnchor?.let {
+            removeEventAnchor(it)
+        }
+        val longClick = object :
+                OnLongClickEventAnchor<AutoPagerView.ViewHolder>(AutoPagerView.ViewHolder::class.java) {
+
+            fun onBind(viewHolder: AutoPagerView.ViewHolder): View? {
+                return if (viewHolder.itemView.isClickable) viewHolder.itemView else null
+            }
+
+            override fun onBindMany(viewHolder: AutoPagerView.ViewHolder): List<View?>? {
+                return listOf(viewHolder.itemView)
+            }
+
+
+            override fun onLongClick(position: Int, view: View,
+                                     viewHolder: AutoPagerView.ViewHolder,
+                                     rawData: AbstractCellItem<*>?): Boolean {
+                return onItemLongClickListener?.onLongClick(position, view, viewHolder, rawData) == true
+            }
+
+        }
+        addEventAnchor(longClick)
+        longClickEventAnchor = longClick
+    }
+
+    /**
+     * If the view of this model is not long clickable, it will not trigger callback.
+     *
+     * @throws IllegalStateException
+     * this method must be called before setAdapter
+     */
+    fun addOnItemLongClickListener(onItemLongClickListener: OnItemLongClickListener?) {
+        check(!(isAttached && this.onItemLongClickListener == null && onItemLongClickListener != null)) {
+            "setOnItemLongClickListener() must be called before setAdapter()"
+        }
+        if (isAttached && longClickEventAnchor == null) {
+            addOnItemLongClickEventHook()
+        }
+        this.onItemLongClickListener = onItemLongClickListener
+    }
+
+    interface OnItemLongClickListener {
+        fun onLongClick(position: Int, itemView: View,
+                        viewHolder: AutoPagerView.ViewHolder,
+                        model: AbstractCellItem<*>?): Boolean
+    }
+
+    interface OnItemClickListener {
+        fun onClick(position: Int, itemView: View,
+                    viewHolder: AutoPagerView.ViewHolder,
+                    model: AbstractCellItem<*>?)
+    }
     //</editor-fold>
 }

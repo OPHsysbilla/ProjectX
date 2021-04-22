@@ -29,6 +29,7 @@ import autoexclue.adapter.AutoPageAdapter
 import autoexclue.item.AbstractCellItem
 import am.widget.wraplayout.item.TestCellItem
 import am.widget.wraplayout.item.GroupTitleCellItem
+import android.util.Log
 import autoexclue.AutoPagerView
 import kotlinx.android.synthetic.main.activity_wraplayout.*
 import java.util.*
@@ -71,6 +72,12 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
         mVContent?.callbackPageIndex = {
             pager_index.setPageDecorateText(it)
         }
+        adapter.setOnItemClickListener(object : AutoPageAdapter.OnItemClickListener {
+            override fun onClick(position: Int, itemView: View, viewHolder: AutoPagerView.ViewHolder, model: AbstractCellItem<*>) {
+                val title = (model as? TestCellItem)?.str ?:""
+                Log.d("autopagers", " onClick post: $position, $title")
+            }
+        })
         mVContent!!.adapter = adapter
         generateData()
     }
