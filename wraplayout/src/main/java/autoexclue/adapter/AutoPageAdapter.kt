@@ -164,7 +164,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
      * Register a callback to be invoked when [.models] are clicked.
      * If the view of this model is not clickable, it will not trigger callback.
      *     * @throws IllegalStateException this method must be called before
-     * [RecyclerView.setAdapter]
+     * [AutoPageAdapter#setAdapter]
      */
     fun setOnItemClickListener(onItemClickListener: OnItemClickListener?) {
         check(!(isAttached && clickEventAnchor == null && onItemClickListener != null)) {

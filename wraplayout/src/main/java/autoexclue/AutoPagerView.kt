@@ -8,6 +8,7 @@ import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
 import autoexclue.adapter.CellAdapterDataObservable
 import autoexclue.adapter.CellAdapterDataObserver
 import java.util.*
@@ -30,8 +31,10 @@ open class AutoPagerView : ViewGroup {
     var adapter: Adapter<*>? = null
         set(value) {
             field?.unregisterAdapterDataObserver(mObserver)
+            field?.onDetachedFromRecyclerView(this)
             field = value
             value?.registerAdapterDataObserver(mObserver)
+            value?.onAttachedToRecyclerView(this)
         }
     private var mVerticalSpacing = 0
     private var mHorizontalSpacing = 0
@@ -451,6 +454,11 @@ open class AutoPagerView : ViewGroup {
         private val viewHolderSparseArray = SparseArray<VH>()
 
         abstract fun onCreateViewHolderAt(index: Int, parent: ViewGroup): VH
+
+
+        fun onAttachedToRecyclerView(autoPagerView: AutoPagerView) {}
+
+        fun onDetachedFromRecyclerView(autoPagerView: AutoPagerView) {}
 
         //        <editor-fold desc="AdapterDataObserver">
         fun registerAdapterDataObserver(observer: CellAdapterDataObserver) {
