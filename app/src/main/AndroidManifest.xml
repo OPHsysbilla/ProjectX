@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="am.project.x">
+    package="am.project.x" >
 
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -19,22 +19,25 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme" >
+        <activity android:name=".business.widgets.wraplayout.TwoLineActivity" >
+        </activity>
         <activity
             android:name=".business.welcome.WelcomeActivity"
-            android:theme="@style/WelcomeTheme">
+            android:theme="@style/WelcomeTheme" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
             <meta-data
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
         <activity
             android:name=".business.main.MainActivity"
-            android:theme="@style/MainTheme">
+            android:theme="@style/MainTheme" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
@@ -161,7 +164,7 @@
             android:name=".business.others.ftp.FtpTileService"
             android:icon="@drawable/ic_tile_ftp"
             android:label="@string/ftp_tile_label_inactive"
-            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE" >
             <intent-filter>
                 <action android:name="android.service.quicksettings.action.QS_TILE" />
             </intent-filter>

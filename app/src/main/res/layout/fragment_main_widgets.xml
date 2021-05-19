@@ -243,5 +243,22 @@
             app:layout_constraintStart_toEndOf="@id/widget_btn_smoothinputlayout"
             app:layout_constraintTop_toTopOf="@id/widget_btn_smoothinputlayout"
             app:layout_constraintWidth_percent="0.25" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/widget_btn_twolineactiviy"
+            style="@style/Widget.AppCompat.Button.Borderless.Colored"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="?selectableItemBackgroundBorderless"
+            android:drawableTop="@drawable/ic_widgets_recyclepager"
+            android:drawablePadding="6dp"
+            android:paddingTop="18dp"
+            android:paddingBottom="18dp"
+            android:text="两行"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="@id/widget_btn_smoothinputlayout"
+            app:layout_constraintStart_toEndOf="@id/widget_btn_multifunctionalrecyclerview"
+            app:layout_constraintTop_toTopOf="@id/widget_btn_smoothinputlayout"
+            app:layout_constraintWidth_percent="0.25" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

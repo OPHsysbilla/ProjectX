@@ -15,9 +15,11 @@
  */
 package am.project.x.business.main.fragments;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
+import am.project.x.business.widgets.wraplayout.TwoLineActivity;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -57,6 +59,7 @@ public class WidgetsFragment extends BaseFragment {
         findViewById(R.id.widget_btn_shapeimageview).setOnClickListener(this::open);
         findViewById(R.id.widget_btn_statelayout).setOnClickListener(this::open);
         findViewById(R.id.widget_btn_wraplayout).setOnClickListener(this::open);
+        findViewById(R.id.widget_btn_twolineactiviy).setOnClickListener(this::open);
         findViewById(R.id.widget_btn_drawableratingbar).setOnClickListener(this::open);
         findViewById(R.id.widget_btn_headerfootergridview).setOnClickListener(this::open);
         findViewById(R.id.widget_btn_multiactiontextview).setOnClickListener(this::open);
@@ -86,6 +89,9 @@ public class WidgetsFragment extends BaseFragment {
                 break;
             case R.id.widget_btn_wraplayout:
                 WrapLayoutActivity.start(requireContext());
+                break;
+            case R.id.widget_btn_twolineactiviy:
+                startActivity(new Intent(requireContext(), TwoLineActivity.class));
                 break;
             case R.id.widget_btn_drawableratingbar:
                 DrawableRatingBarActivity.start(requireContext());

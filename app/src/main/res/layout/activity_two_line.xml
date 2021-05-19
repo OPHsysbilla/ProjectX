@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="40dp"
+    android:paddingRight="40dp"
+    tools:context=".business.widgets.wraplayout.TwoLineActivity">
+
+
+    <FrameLayout
+        android:id="@+id/layout_examine_answer_content"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@drawable/rectangle_ly"
+        app:layout_constraintBottom_toTopOf="@id/btn_finish"
+        app:layout_constraintTop_toBottomOf="@id/range_select"
+        tools:layout_editor_absoluteX="167dp" />
+
+    <ImageView
+        android:id="@+id/btn_next_page"
+        android:layout_width="66dp"
+        android:layout_height="72dp"
+        android:layout_marginLeft="32dp"
+        android:padding="17dp"
+        android:background="#E8E8E8"
+        android:src="@drawable/ic_borderless_next_page"
+        app:layout_constraintBottom_toBottomOf="@id/range_select"
+        app:layout_constraintLeft_toRightOf="@id/range_select"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/range_select" />
+
+    <ImageView
+        android:id="@+id/btn_prev_page"
+        android:layout_width="66dp"
+        android:layout_height="72dp"
+        android:padding="17dp"
+        android:background="#E8E8E8"
+        android:layout_marginRight="32dp"
+        android:src="@drawable/ic_borderless_prev_page"
+        app:layout_constraintBottom_toBottomOf="@id/range_select"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toLeftOf="@id/range_select"
+        app:layout_constraintTop_toTopOf="@id/range_select"
+        app:layout_goneMarginLeft="40dp" />
+
+    <TextView
+        android:id="@+id/parse_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:text="题目解析"
+        android:textColor="@android:color/black"
+        android:textSize="36dp"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/pager_index"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:text="第1/2页"
+        android:textColor="@android:color/black"
+        android:textSize="36dp"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/btn_finish"
+        android:layout_width="match_parent"
+        android:layout_height="96dp"
+        android:layout_marginBottom="40dp"
+        android:layout_marginTop="40dp"
+        android:background="@drawable/rectangle_ly"
+        android:gravity="center"
+        android:text="返回首页"
+        android:textColor="@android:color/black"
+        android:textSize="34dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/layout_examine_answer_content" />
+
+    <am.widget.wraplayout.MegezScrollView
+        android:id="@+id/range_select"
+        android:layout_width="0dp"
+        android:layout_height="161dp"
+        android:orientation="horizontal"
+        app:layout_constraintLeft_toRightOf="@id/btn_prev_page"
+        app:layout_constraintRight_toLeftOf="@id/btn_next_page"
+        app:layout_constraintTop_toBottomOf="@id/parse_start" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

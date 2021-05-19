@@ -12,6 +12,7 @@ data class Segment constructor(
         var end: Int = 0,
         var size: Int = 0
 )
+
 fun Segment.reset() {
     this.start = 0
     this.end = 0

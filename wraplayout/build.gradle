@@ -8,9 +8,9 @@ android {
 
     defaultConfig {
         //noinspection MinSdkTooLow
-        minSdkVersion 5
+        minSdkVersion 14
         targetSdkVersion 30
-        versionCode 5
+        versionCode 14
         versionName "1.2.1"
     }
 
@@ -19,6 +19,9 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8.toString()
+    }
 
 }
 

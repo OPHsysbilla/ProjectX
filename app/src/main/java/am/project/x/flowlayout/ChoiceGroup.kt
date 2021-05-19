@@ -5,8 +5,11 @@ package com.fenbi.megrez.app.exercisescope.flowlayout
  */
 class ChoiceGroup<T>(
     val groupTitle: String?,
-    val choices: List<ChoiceTag<T>> = emptyList(),
-    var lastSelect: ChoiceTag<T>? = null
-) {
-
+    val choices: List<ChoiceTag<T>> = emptyList()
+){
+    var lastSelect: ChoiceTag<T>? = choices.firstOrNull()
+    set(value) {
+        value?.isSelect = true
+        field = value
+    }
 }

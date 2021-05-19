@@ -32,6 +32,7 @@ import am.widget.wraplayout.item.GroupTitleCellItem
 import android.util.Log
 import android.widget.Button
 import autoexclue.AutoPagerView
+import autoexclue.layout.LinearLayoutMaster
 import com.fenbi.megrez.app.exercisescope.flowlayout.ChoiceDialog
 import kotlinx.android.synthetic.main.activity_wraplayout.*
 import java.util.*
@@ -79,9 +80,11 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
                 mVContent?.switchToPage(a - 1)
             }
         }
-        mVContent?.callbackPageIndex = {
+        val layoutMaster =  LinearLayoutMaster()
+        layoutMaster.callbackPageIndex = {
             pager_index.setPageDecorateText(it)
         }
+        mVContent?.layoutMaster = layoutMaster
         adapter.setOnItemClickListener(object : AutoPageAdapter.OnItemClickListener {
             override fun onClick(position: Int, itemView: View, viewHolder: AutoPagerView.ViewHolder, model: AbstractCellItem<*>?) {
                 val title = (model as? TestCellItem)?.str ?:""
@@ -123,11 +126,11 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
             R.id.wl_sb_horizontal -> mVContent?.horizontalSpacing = (progress * resources.displayMetrics.density).toInt()
             R.id.wl_sb_vertical -> mVContent?.verticalSpacing = (progress * resources.displayMetrics.density).toInt()
             R.id.wl_sb_height -> {
-                val lp = other!!.layoutParams
+                val lp = mVContent!!.layoutParams
                 val p = progress * 1.0f / 100f
-                lp.height = (p * resources.displayMetrics.density * 1000).toInt()
-                other!!.layoutParams = lp
-                other!!.requestLayout()
+                lp.height = (p * resources.displayMetrics.density * 1000 + 500).toInt()
+                mVContent!!.layoutParams = lp
+                mVContent!!.requestLayout()
             }
         }
     }

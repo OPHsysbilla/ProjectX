@@ -3,13 +3,17 @@ package autoexclue
 import am.widget.wraplayout.R
 import android.annotation.TargetApi
 import android.content.Context
+import android.graphics.Rect
 import android.util.AttributeSet
 import android.util.Log
 import android.util.SparseArray
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.ViewCompat
+import androidx.recyclerview.widget.RecyclerView
 import autoexclue.adapter.CellAdapterDataObservable
 import autoexclue.adapter.CellAdapterDataObserver
+import autoexclue.layout.LayoutChildrenHelper
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -22,10 +26,23 @@ import kotlin.collections.ArrayList
  */
 open class AutoPagerView : ViewGroup {
     companion object {
-        private const val MAX_PER_MEASURE_CNT = 10
+        const val MAX_PER_MEASURE_CNT = 10
         private val ATTRS = intArrayOf(android.R.attr.horizontalSpacing,
                 android.R.attr.verticalSpacing)
+
+        fun logOf(s: String) {
+            Log.d("AutoPagerView", s)
+        }
     }
+
+    private val mTempRect: Rect = Rect()
+
+    var layoutMaster: LayoutMaster? = null
+        set(value) {
+            field?.setRecyclerView(null)
+            value?.setRecyclerView(this)
+            field = value
+        }
 
     var adapter: Adapter<*>? = null
         set(value) {
@@ -38,14 +55,11 @@ open class AutoPagerView : ViewGroup {
     private var mVerticalSpacing = 0
     private var mHorizontalSpacing = 0
 
-    private var lastWidthMeasureSpec: Int = 0
-    private var lastHeightMeasureSpec: Int = 0
-
     private var mIsAttachToWindow = false
     private var mAdapterUpdateDuringMeasure = false
     private val mObserver = MtObserver()
-    private var isDuringLayout = false
-    private var firstMeasureEnd = true
+
+    protected var mLayoutState: LayoutState = LayoutState()
 
     open class ViewHolder constructor(val itemView: View) {
         var mPosition = -1
@@ -66,10 +80,6 @@ open class AutoPagerView : ViewGroup {
     @TargetApi(21)
     constructor(context: Context, attrs: AttributeSet?, defStyleAttr: Int, defStyleRes: Int) : super(context, attrs, defStyleAttr, defStyleRes) {
         initView(context, attrs, defStyleAttr)
-    }
-
-    private fun logOf(s: String) {
-        Log.d("AutoPagerView", s)
     }
 
     private fun initView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) {
@@ -130,119 +140,33 @@ open class AutoPagerView : ViewGroup {
         mIsAttachToWindow = false
     }
 
+    class LayoutState {
+        enum class Step {
+            None,
+            Measure,
+            Layout,
+        }
+
+        fun isStepMeasure(): Boolean = mStep == Step.Measure
+        fun isStepLayout(): Boolean = mStep == Step.Layout
+        fun isOnlyMeasure() : Boolean = isStepMeasure()
+
+        var isMeasureAll = false
+        var mStep: Step = Step.None
+        var firstMeasureEnd = true
+    }
+
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        mLayoutState.mStep = LayoutState.Step.Measure
         val measureStartTime = System.currentTimeMillis()
-        var itemsWidth = 0
-        var itemsHeight = 0
-        val paddingLeft = paddingLeft
-        val paddingRight = paddingRight
-        val paddingTop = paddingTop
-        val paddingBottom = paddingBottom
-        val suggestedMinimumWidth = suggestedMinimumWidth
-        val suggestedMinimumHeight = suggestedMinimumHeight
-
-        lastWidthMeasureSpec = widthMeasureSpec
-        lastHeightMeasureSpec = heightMeasureSpec
-        checkFirstMeasure(widthMeasureSpec, heightMeasureSpec)
-        val s = getCurSegment()
-        if (s != null) {
-            itemsHeight = s.height
-            itemsWidth = s.width
-        }
-        itemsWidth = Math.max(paddingLeft + itemsWidth + paddingRight, suggestedMinimumWidth)
-        itemsHeight = Math.max(paddingTop + itemsHeight + paddingBottom, suggestedMinimumHeight)
-        setMeasuredDimension(resolveSize(itemsWidth, widthMeasureSpec),
-                resolveSize(itemsHeight, heightMeasureSpec))
-        logOf("onMeasure: ${System.currentTimeMillis() - measureStartTime}")
-    }
-
-    private fun checkFirstMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        preMeasurePage(pageWantToMeasure = curSegIndex,
-                widthMeasureSpec = widthMeasureSpec, heightMeasureSpec = heightMeasureSpec,
-                firstMeasure = segments.isEmpty())
-    }
-
-    private fun preMeasurePage(pageWantToMeasure: Int, widthMeasureSpec: Int, heightMeasureSpec: Int, firstMeasure: Boolean = false, measureSize: Int = MAX_PER_MEASURE_CNT) {
-        val cur = segmentAt(pageWantToMeasure)
-        val pre = segmentAt(pageWantToMeasure - 1)
-        val dataIndex = if (firstMeasure) 0 else pre?.end ?: 0
-        val rangeEnd = if (firstMeasure) getDataSize() else Math.min(dataIndex + measureSize, getDataSize())
-
-
-        if (firstMeasure) {
-            firstMeasureEnd = false
-        }
-        val measureAll = !firstMeasureEnd
-        preMeasureDataRange(measureAll = measureAll, pageIndex = pageWantToMeasure,
-                widthMeasureSpec = widthMeasureSpec, heightMeasureSpec = heightMeasureSpec,
-                rangeStart = dataIndex, rangeEnd = rangeEnd)
-        if (firstMeasure) {
-            firstMeasureEnd = true
-        }
+        layoutMaster?.setMeasureSpecs(widthMeasureSpec, heightMeasureSpec)
+        layoutMaster?.onMeasure(mLayoutState)
+        layoutMaster?.decideMeasuredDimensionFromChildren(mLayoutState, widthMeasureSpec, heightMeasureSpec)
+        logOf("onMeasure: ${System.currentTimeMillis() - measureStartTime}, measureHeight: ${measuredHeight}")
     }
 
     private fun getDataSize(): Int = adapter?.totalDataSize() ?: 0
-
-    private fun getCurSegment(): Segment? = segmentAt(curSegIndex)
-
-    private fun segmentAt(i: Int): Segment? = segments.getOrNull(i)
-
-    private fun preMeasureDataRange(measureAll: Boolean = false, pageIndex: Int, widthMeasureSpec: Int, heightMeasureSpec: Int, rangeStart: Int, rangeEnd: Int) {
-        var page = pageIndex
-        var dataIndex = rangeStart
-        val defaultMeasureSize = MAX_PER_MEASURE_CNT
-        while (dataIndex < rangeEnd) {
-            val reuseSegment = tempMeasureSegments.get(page, Segment(0, 0, 0))
-            reuseSegment.measureStart = dataIndex
-            reuseSegment.measureEnd = dataIndex + defaultMeasureSize
-            reuseSegment.measureSize = defaultMeasureSize
-            measureOnePage(measureAll, reuseSegment, widthMeasureSpec, heightMeasureSpec)
-            dataIndex += reuseSegment.measureSize
-            tempMeasureSegments.put(page, reuseSegment)
-            if (page < segments.size) {
-                segments[page] = reuseSegment
-            } else segments.add(reuseSegment)
-            page++
-        }
-    }
-
-    private val segments: MutableList<Segment> = ArrayList()
-    private val tempMeasureSegments: SparseArray<Segment> = SparseArray()
-    private var curSegIndex = 0
-
-    private fun measureOnePage(measureAll: Boolean, segment: Segment, widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val paddingTop = paddingTop
-        val paddingBottom = paddingBottom
-        val heightSize = MeasureSpec.getSize(heightMeasureSpec)
-        var collectHeight = 0
-        val collectWidth = 0
-        var rows = 0
-        val childCount = segment.measureSize
-        if (childCount > 0) {
-            val maxItemsHeight = heightSize - paddingTop - paddingBottom
-            val end = Math.min(segment.measureEnd, getDataSize())
-            for (index in segment.start until end) {
-                val childHeight: Int = if (measureAll) {
-                    adapter?.measureHeightAt(context, index) ?: 0
-                } else {
-                     val child = getViewOf(index) ?: continue
-                    if (isViewGone(child)) continue
-                    measureChild(child, widthMeasureSpec, heightMeasureSpec)
-                    child.measuredHeight
-                }
-                val curRowHeight = if (rows == 0) childHeight else mVerticalSpacing + childHeight
-                if (collectHeight + curRowHeight <= maxItemsHeight) {
-                    collectHeight += curRowHeight
-                    rows++
-                }
-            }
-        }
-        segment.height = collectHeight
-        segment.width = collectWidth
-        segment.measureSize = rows
-        segment.measureRows = rows
-        segment.measureEnd = segment.measureStart + segment.measureSize
-    }
 
     private fun isViewGone(child: View): Boolean {
         if (child.visibility == GONE) {
@@ -285,100 +209,35 @@ open class AutoPagerView : ViewGroup {
         return holder
     }
 
+
+    private fun defaultOnMeasure(widthSpec: Int, heightSpec: Int) {
+        // calling LayoutManager here is not pretty but that API is already public and it is better
+        // than creating another method since this is internal.
+        val s = layoutMaster?.getCurSegment()
+        val preMeasureWidth = s?.width ?: 0
+        val preMeasureHeight = s?.height ?: 0
+
+        val width = LayoutMaster.chooseDesiredSize(widthSpec,
+                paddingLeft + paddingRight + preMeasureWidth,
+                ViewCompat.getMinimumWidth(this))
+        val height = LayoutMaster.chooseDesiredSize(heightSpec,
+                paddingTop + paddingBottom + preMeasureHeight,
+                ViewCompat.getMinimumHeight(this))
+        setMeasuredDimension(width, height)
+    }
+
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        if (isDuringLayout) return
-        isDuringLayout = true
-        getCurSegment()?.let { cur: Segment ->
-            val pre = segmentAt(curSegIndex - 1)
-            layoutChunk(cur, pre)
-            onLayoutFinish()
-        }
-        isDuringLayout = false
+        if (mLayoutState.mStep == LayoutState.Step.Layout) return
+        mLayoutState.mStep = LayoutState.Step.Layout
+        layoutMaster?.dispatchLayout(mLayoutState)
+        mLayoutState.mStep = LayoutState.Step.None
     }
 
-    private fun onLayoutFinish() {
-        val c = getCurSegment()
-        logOf("onLayoutFinish: page index: ${curSegIndex + 1}/${segments.size}， " +
-                "cur page: range [${c?.start} - ${c?.end}) = curItemNum: ${c?.size} / totalItemNum: ${getDataSize()}")
-        callbackPageIndex?.invoke("${curSegIndex + 1}/${segments.size}")
-    }
+    fun switchToPage(index: Int) = layoutMaster?.switchToPage(index)
 
-    var callbackPageIndex: ((String) -> Unit)? = null
+    fun getCurrentIndex() = layoutMaster?.getCurrentIndex() ?: 0
 
-
-    fun switchToPage(index: Int) {
-        val oldIndex = curSegIndex
-        val s = getCurSegment()
-        val lastItemSequence = s?.end ?: 0
-        val total = getTotalPage()
-        if (index <= 0) {
-            curSegIndex = 0
-        } else if (index >= total && lastItemSequence == getDataSize()) {
-            curSegIndex = total - 1
-        } else {
-            curSegIndex = index
-        }
-        if (oldIndex != curSegIndex) {
-            requestLayout()
-        }
-    }
-
-    fun getCurrentIndex() = curSegIndex
-
-    fun getTotalPage() = segments.size
-
-    private fun layoutChunk(segment: Segment, pre: Segment?) {
-        val startTime = System.currentTimeMillis()
-        removeAllViews()
-        val paddingStart = paddingLeft
-        val paddingTop = paddingTop
-        var visibleCount = 0
-        var columnTop = paddingTop - mVerticalSpacing
-        var start = pre?.end ?: 0
-        start = Math.max(start, 0)
-        val end = Math.min(start + MAX_PER_MEASURE_CNT, getDataSize())
-        var dataIndex = start
-        while (dataIndex < end) {
-            val numColumn = 1
-            var childMaxHeight = 0
-            var startX = paddingStart - mHorizontalSpacing
-            var column = 0
-            while (column < numColumn) {
-                val childView = getViewOf(dataIndex)
-                if (childView == null || childView.visibility == GONE) {
-                    continue
-                }
-                val childWidth = childView.measuredWidth
-                val childHeight = childView.measuredHeight
-                val lp = childView.layoutParams as LayoutParams
-                startX += mHorizontalSpacing
-                val startY = columnTop + mVerticalSpacing
-                if (startY + childHeight > measuredHeight) {
-                    lp.isInvisibleOutValidLayout = true
-                    childView.visibility = INVISIBLE
-                    removeView(childView)
-                } else {
-                    visibleCount++
-                    segment.layoutRows = visibleCount
-                    addView(childView)
-                    childView.layout(startX, startY, startX + childWidth, startY + childHeight)
-                    childMaxHeight = Math.max(childMaxHeight, childHeight)
-                    if (childView.visibility == INVISIBLE) {
-                        lp.isInvisibleOutValidLayout = false
-                        childView.visibility = VISIBLE
-                    }
-                }
-                column++
-                dataIndex++
-            }
-            columnTop += mVerticalSpacing + childMaxHeight
-        }
-        segment.start = start
-        segment.size = segment.layoutRows
-        segment.measureRows = segment.layoutRows
-        segment.end = segment.start + segment.size
-        logOf("onLayout: ${System.currentTimeMillis() - startTime}")
-    }
+    fun getTotalPage() = layoutMaster?.getTotalPage() ?: 0
 
     /**
      * 设置水平间距
@@ -405,10 +264,44 @@ open class AutoPagerView : ViewGroup {
         }
 
 
+    private val layoutChildrenHelper: LayoutChildrenHelper by lazy {
+        object : LayoutChildrenHelper {
+            override fun getChildAt(i: Int): View? = this@AutoPagerView.getChildAt(i)
+            override fun getChildrenCount(): Int = this@AutoPagerView.childCount
+            override fun preMeasureChild(context: Context, index: Int): Int = adapter?.measureHeightAt(context, index)
+                    ?: 0
+
+            override fun removeAllViews() = this@AutoPagerView.removeAllViews()
+
+            override fun getViewOf(dataIndex: Int): View? = this@AutoPagerView.getViewOf(dataIndex)
+
+            override fun removeView(childView: View) = this@AutoPagerView.removeView(childView)
+
+            override fun addView(childView: View) = this@AutoPagerView.addView(childView)
+            override fun isViewGone(child: View): Boolean = this@AutoPagerView.isViewGone(child)
+        }
+    }
+
+
+    //<editor-fold desc="measure child decorate">
+    private fun getDecoratedBoundsWithMarginsInt(view: View?, outBounds: Rect) {
+        val lp = view?.layoutParams as? AutoPagerView.LayoutParams ?: return
+        val insets = lp.mDecorInsets
+        outBounds.set(view.left - insets.left - lp.leftMargin,
+                view.top - insets.top - lp.topMargin,
+                view.right + insets.right + lp.rightMargin,
+                view.bottom + insets.bottom + lp.bottomMargin)
+    }
+
+    // TODO: 完善decor
+    private fun getItemDecorInsetsForChild(child: View): Rect? = Rect()
+    //</editor-fold>
+
     /**
      * Per-child layout information associated with AutoExcludeLayout.
      */
     class LayoutParams : MarginLayoutParams {
+        val mDecorInsets = Rect()
         var mViewHolder: ViewHolder? = null
         var isWithinValidLayout = false
         var isInvisibleOutValidLayout = false
@@ -510,4 +403,289 @@ open class AutoPagerView : ViewGroup {
         abstract fun measureHeightAt(context: Context, index: Int): Int
 
     }
+
+    abstract class LayoutMaster {
+        protected var mWidthMode: Int = MeasureSpec.EXACTLY
+        protected var mHeightMode: Int = MeasureSpec.EXACTLY
+        protected var mWidth: Int = 0
+        protected var mHeight: Int = 0
+        var mAutoPagerView: AutoPagerView? = null
+        var mChildrenHelper: LayoutChildrenHelper? = null
+
+        protected val segments: MutableList<Segment> = ArrayList()
+        protected val tempMeasureSegments: SparseArray<Segment> = SparseArray()
+        var curSegIndex = 0
+
+        abstract fun dispatchLayout(layoutState: LayoutState)
+
+        fun setRecyclerView(autoPagerView: AutoPagerView?) {
+            if (autoPagerView == null) {
+                mAutoPagerView = null
+                mWidth = 0
+                mHeight = 0
+                mChildrenHelper = null
+            } else {
+                mAutoPagerView = autoPagerView
+                mChildrenHelper = autoPagerView.layoutChildrenHelper
+                mWidth = autoPagerView.width
+                mHeight = autoPagerView.height
+            }
+            mWidthMode = MeasureSpec.EXACTLY
+            mHeightMode = MeasureSpec.EXACTLY
+        }
+
+        fun setMeasureSpecs(wSpec: Int, hSpec: Int) {
+            mWidth = MeasureSpec.getSize(wSpec)
+            mWidthMode = MeasureSpec.getMode(wSpec)
+            mHeight = MeasureSpec.getSize(hSpec)
+            mHeightMode = MeasureSpec.getMode(hSpec)
+        }
+
+        open fun decideMeasuredDimensionFromChildren(layoutState: LayoutState, widthSpec: Int, heightSpec: Int) {
+            val pagerView = mAutoPagerView ?: return
+            val count: Int = getChildCount()
+            if (count == 0) {
+                pagerView.defaultOnMeasure(widthSpec, heightSpec)
+                return
+            }
+            var minX = Int.MAX_VALUE
+            var minY = Int.MAX_VALUE
+            var maxX = Int.MIN_VALUE
+            var maxY = Int.MIN_VALUE
+            for (i in 0 until count) {
+                val child: View = getChildAt(i) ?: continue
+                val bounds: Rect = pagerView.mTempRect
+                getDecoratedBoundsWithMargins(child, bounds)
+                minX = Math.min(minX, bounds.left)
+                maxX = Math.max(maxX, bounds.right)
+                minY = Math.min(minY, bounds.top)
+                maxY = Math.max(maxY, bounds.bottom)
+            }
+            pagerView.mTempRect.set(minX, minY, maxX, maxY)
+            setMeasuredDimension(pagerView.mTempRect, widthSpec, heightSpec)
+        }
+
+        companion object {
+            @JvmStatic
+            fun chooseDesiredSize(spec: Int, desired: Int, min: Int): Int {
+                val mode = MeasureSpec.getMode(spec)
+                val size = MeasureSpec.getSize(spec)
+                return when (mode) {
+                    MeasureSpec.EXACTLY -> size
+                    MeasureSpec.AT_MOST -> Math.min(size, Math.max(desired, min))
+                    MeasureSpec.UNSPECIFIED -> Math.max(desired, min)
+                    else -> Math.max(desired, min)
+                }
+            }
+
+            @JvmStatic
+            fun getChildMeasureSpecInner(parentSize: Int, parentMode: Int, padding: Int,
+                                         childDimension: Int): Int {
+                val size = Math.max(0, parentSize - padding)
+                var resultSize = 0
+                var resultMode = 0
+                if (childDimension >= 0) {
+                    resultSize = childDimension
+                    resultMode = MeasureSpec.EXACTLY
+                } else if (childDimension == ViewGroup.LayoutParams.MATCH_PARENT) {
+                    resultSize = size
+                    resultMode = parentMode
+                } else if (childDimension == ViewGroup.LayoutParams.WRAP_CONTENT) {
+                    resultSize = size
+                    resultMode = if (parentMode == MeasureSpec.AT_MOST || parentMode == MeasureSpec.EXACTLY) {
+                        MeasureSpec.AT_MOST
+                    } else {
+                        MeasureSpec.UNSPECIFIED
+                    }
+                }
+                return MeasureSpec.makeMeasureSpec(resultSize, resultMode)
+            }
+
+            @JvmStatic
+            fun isMeasurementUpToDate(childSize: Int, spec: Int, dimension: Int): Boolean {
+                val specMode = MeasureSpec.getMode(spec)
+                val specSize = MeasureSpec.getSize(spec)
+                if (dimension > 0 && childSize != dimension) {
+                    return false
+                }
+                return when (specMode) {
+                    MeasureSpec.UNSPECIFIED -> true
+                    MeasureSpec.AT_MOST -> specSize >= childSize
+                    MeasureSpec.EXACTLY -> specSize == childSize
+                    else -> false
+                }
+            }
+        }
+
+        open fun setMeasuredDimension(childrenBounds: Rect, wSpec: Int, hSpec: Int) {
+            val usedWidth: Int = childrenBounds.width() + getPaddingLeft() + getPaddingRight()
+            val usedHeight: Int = childrenBounds.height() + getPaddingTop() + getPaddingBottom()
+            val width = chooseDesiredSize(wSpec, usedWidth, getMinimumWidth())
+            val height = chooseDesiredSize(hSpec, usedHeight, getMinimumHeight())
+            setFinalMeasuredDimension(resolveSize(width, wSpec), resolveSize(height, hSpec))
+        }
+
+        protected fun getMinimumWidth(): Int = mAutoPagerView?.let { ViewCompat.getMinimumWidth(it) }
+                ?: 0
+
+        protected fun getMinimumHeight(): Int = mAutoPagerView?.let { ViewCompat.getMinimumHeight(it) }
+                ?: 0
+
+        protected fun getPaddingLeft(): Int = mAutoPagerView?.paddingLeft ?: 0
+        protected fun getPaddingTop(): Int = mAutoPagerView?.paddingTop ?: 0
+        protected fun getPaddingRight(): Int = mAutoPagerView?.paddingRight ?: 0
+        protected fun getPaddingBottom(): Int = mAutoPagerView?.paddingBottom ?: 0
+        protected fun getVerticalSpacing(): Int = mAutoPagerView?.verticalSpacing ?: 0
+        protected fun getHorizontalSpacing(): Int = mAutoPagerView?.horizontalSpacing ?: 0
+        private fun getItemDecorInsetsForChild(child: View): Rect = mAutoPagerView?.getItemDecorInsetsForChild(child)
+                ?: Rect()
+
+        fun setFinalMeasuredDimension(widthSize: Int, heightSize: Int) {
+            mAutoPagerView?.setMeasuredDimension(widthSize, heightSize)
+        }
+
+        fun getChildAt(i: Int): View? = mChildrenHelper?.getChildAt(i)
+
+        fun getChildCount(): Int = mChildrenHelper?.getChildrenCount() ?: 0
+
+        protected fun getDecoratedBoundsWithMargins(child: View?, bounds: Rect) = mAutoPagerView?.getDecoratedBoundsWithMarginsInt(child, bounds)
+
+
+        fun getCurrentIndex() = curSegIndex
+
+        fun getTotalPage() = segments.size
+
+        fun switchToPage(index: Int) {
+            val pagerView = mAutoPagerView
+            pagerView ?: return
+            val oldIndex = curSegIndex
+            val s = getCurSegment()
+            val lastItemSequence = s?.end ?: 0
+            val total = getTotalPage()
+            val dataSize = getDataSize()
+            if (index <= 0) {
+                curSegIndex = 0
+            } else if (index >= total && lastItemSequence == dataSize) {
+                curSegIndex = total - 1
+            } else {
+                curSegIndex = index
+            }
+            if (oldIndex != curSegIndex) {
+                pagerView.requestLayout()
+            }
+        }
+
+        fun getDataSize() = mAutoPagerView?.getDataSize() ?: 0
+
+        fun getCurSegment(): Segment? = segmentAt(curSegIndex)
+
+        fun segmentAt(i: Int): Segment? = segments.getOrNull(i)
+
+        fun measureChildWithMargins(child: View, widthUsed: Int, heightUsed: Int) {
+            var w = widthUsed
+            var h = heightUsed
+            val lp = child.layoutParams as LayoutParams
+            val insets: Rect = getItemDecorInsetsForChild(child)
+            w += insets.left + insets.right
+            h += insets.top + insets.bottom
+            val widthSpec = LayoutMaster.getChildMeasureSpecInner(mWidth, mWidthMode,
+                    getPaddingLeft() + getPaddingRight()
+                            + lp.leftMargin + lp.rightMargin + w, lp.width)
+            val heightSpec = LayoutMaster.getChildMeasureSpecInner(mHeight, mHeightMode,
+                    (getPaddingTop() + getPaddingBottom()
+                            + lp.topMargin + lp.bottomMargin + h), lp.height)
+            if (shouldMeasureChild(child, widthSpec, heightSpec, lp)) {
+                child.measure(widthSpec, heightSpec)
+            }
+        }
+
+        open fun shouldMeasureChild(child: View, widthSpec: Int, heightSpec: Int, lp: LayoutParams): Boolean {
+            return (child.isLayoutRequested
+                    || !isMeasurementUpToDate(child.width, widthSpec, lp.width)
+                    || !isMeasurementUpToDate(child.height, heightSpec, lp.height))
+        }
+
+
+        private fun checkFirstMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int, layoutState: LayoutState) {
+            preMeasurePage(layoutState, pageWantToMeasure = curSegIndex,
+                    widthMeasureSpec = widthMeasureSpec, heightMeasureSpec = heightMeasureSpec,
+                    firstMeasure = segments.isEmpty())
+        }
+
+        private fun preMeasurePage(layoutState: LayoutState, pageWantToMeasure: Int, widthMeasureSpec: Int, heightMeasureSpec: Int, firstMeasure: Boolean = false, measureSize: Int = MAX_PER_MEASURE_CNT) {
+            val cur = segmentAt(pageWantToMeasure)
+            val pre = segmentAt(pageWantToMeasure - 1)
+            val dataIndex = if (firstMeasure) 0 else pre?.end ?: 0
+            val rangeEnd = if (firstMeasure) getDataSize() else Math.min(dataIndex + measureSize, getDataSize())
+
+            if (firstMeasure) {
+                layoutState.firstMeasureEnd = false
+            }
+            val measureAll = !layoutState.firstMeasureEnd
+            preMeasureDataRange(measureAll = measureAll, pageIndex = pageWantToMeasure,
+                    widthMeasureSpec = widthMeasureSpec, heightMeasureSpec = heightMeasureSpec,
+                    rangeStart = dataIndex, rangeEnd = rangeEnd)
+            if (firstMeasure) {
+                layoutState.firstMeasureEnd = true
+            }
+        }
+
+        private fun preMeasureDataRange(measureAll: Boolean = false, pageIndex: Int, widthMeasureSpec: Int, heightMeasureSpec: Int, rangeStart: Int, rangeEnd: Int) {
+            var page = pageIndex
+            var dataIndex = rangeStart
+            val defaultMeasureSize = MAX_PER_MEASURE_CNT
+            while (dataIndex < rangeEnd) {
+                val reuseSegment = tempMeasureSegments.get(page, Segment(0, 0, 0))
+                reuseSegment.measureStart = dataIndex
+                reuseSegment.measureEnd = dataIndex + defaultMeasureSize
+                reuseSegment.measureSize = defaultMeasureSize
+                measureOnePage(measureAll, reuseSegment, widthMeasureSpec, heightMeasureSpec)
+                dataIndex += reuseSegment.measureSize
+                tempMeasureSegments.put(page, reuseSegment)
+                if (page < segments.size) {
+                    segments[page] = reuseSegment
+                } else segments.add(reuseSegment)
+                page++
+            }
+        }
+
+        private fun measureOnePage(measureAll: Boolean, segment: Segment, widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            val pagerView = mAutoPagerView ?: return
+            val paddingTop = getPaddingTop()
+            val paddingBottom = getPaddingBottom()
+            val heightSize = MeasureSpec.getSize(heightMeasureSpec)
+            var collectHeight = 0
+            val collectWidth = 0
+            var rows = 0
+            val childCount = segment.measureSize
+            if (childCount > 0) {
+                val maxItemsHeight = heightSize - paddingTop - paddingBottom
+                val end = Math.min(segment.measureEnd, getDataSize())
+                for (index in segment.start until end) {
+                    val childHeight: Int = if (measureAll) {
+                        mChildrenHelper?.preMeasureChild(pagerView.context, index) ?: 0
+                    } else {
+                        val child = pagerView.getViewOf(index) ?: continue
+                        if (pagerView.isViewGone(child)) continue
+                        pagerView.measureChild(child, widthMeasureSpec, heightMeasureSpec)
+                        child.measuredHeight
+                    }
+                    val curRowHeight = if (rows == 0) childHeight else getVerticalSpacing() + childHeight
+                    if (collectHeight + curRowHeight <= maxItemsHeight) {
+                        collectHeight += curRowHeight
+                        rows++
+                    }
+                }
+            }
+            segment.height = collectHeight
+            segment.width = collectWidth
+            segment.measureSize = rows
+            segment.measureRows = rows
+            segment.measureEnd = segment.measureStart + segment.measureSize
+        }
+
+        abstract fun onMeasure(mLayoutState: AutoPagerView.LayoutState)
+
+    }
+
 }
