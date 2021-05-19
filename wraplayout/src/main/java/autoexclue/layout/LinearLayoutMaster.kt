@@ -85,7 +85,7 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
             }
             rows++
             columnTop += childMaxHeight
-            logOf("columnTop: ${columnTop}, dataIndex: ${dataIndex}, layoutHeight: ${columnTop + getPaddingBottom()}")
+//            logOf("columnTop: ${columnTop}, dataIndex: ${dataIndex}, layoutHeight: ${columnTop + getPaddingBottom()}")
         }
         val measureHeight = columnTop - getPaddingTop()
         fitSegment(segment, height = measureHeight, start = start, size = visibleCount)
@@ -112,8 +112,10 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
 
     private fun onLayoutFinish() {
         val c = getCurSegment()
-        logOf("onLayoutFinish: page index: ${curSegIndex + 1}/${segments.size}， " +
-                "cur page: range [${c?.start} - ${c?.end}) = curItemNum: ${c?.size} / totalItemNum: ${getDataSize()}")
+        logOf("onLayoutFinish: pageindex: ${curSegIndex + 1}/${segments.size}， " +
+                "curpage [start - end]:[${c?.start} - ${c?.end}]， [segSize//dataSize]: [${c?.size}//${getDataSize()}]")
+
+
         callbackPageIndex?.invoke("${curSegIndex + 1}/${segments.size}")
     }
 
