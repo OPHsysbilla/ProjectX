@@ -13,13 +13,14 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
 
     protected fun layoutChunk(layoutState: AutoPagerView.LayoutState, segment: Segment, pre: Segment?) {
         val pagerView = mAutoPagerView ?: return
-        var markHeight = 0
 
         val startTime = System.currentTimeMillis()
         mChildrenHelper?.removeAllViews()
         val isOnlyMeasure = layoutState.isOnlyMeasure()
 
         var columnTop = getPaddingTop()
+        val maxParentAvaliableHeight = mHeight - getPaddingBottom() - getPaddingTop() + columnTop
+
         var visibleCount = 0
         var start = pre?.end ?: 0
         start = Math.max(start, 0)
@@ -33,9 +34,6 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
             var columnleft = getPaddingLeft()
             var column = 0
             while (column < numColumn) {
-                val maxParentAvaliableHeight = mHeight - getPaddingTop() - getPaddingBottom()
-                val maxParentGivenHeight = maxParentAvaliableHeight //if (isOnlyMeasure) maxParentAvaliableHeight else pagerView.measuredHeight
-                markHeight = maxParentGivenHeight
 
                 if(rows > 0 && !layoutFinish) columnTop += getVerticalSpacing()
                 if(column > 0 && !layoutFinish) columnleft += getHorizontalSpacing()
@@ -43,14 +41,15 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
                 if (isOnlyMeasure) {
                     childHeight = mChildrenHelper?.preMeasureChild(pagerView.context, dataIndex)
                             ?: 0
-                    val curRowHeight = if (rows == 0) childHeight else getVerticalSpacing() + childHeight
-                    if (columnTop + curRowHeight <= maxParentGivenHeight) {
+                    val curRowHeight = childHeight
+                    if (columnTop + curRowHeight <= maxParentAvaliableHeight) {
                         columnTop += curRowHeight
                         rows++
                         visibleCount++
                         continue
                     } else {
-                        fitSegment(segment, height = columnTop, start = start, size = visibleCount)
+                        val measureHeight = columnTop - getPaddingTop()
+                        fitSegment(segment, height = measureHeight, start = start, size = visibleCount)
                         return
                     }
                 }
@@ -66,7 +65,7 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
                     childHeight = childView.measuredHeight
                 }
                 val lp = childView.layoutParams as AutoPagerView.LayoutParams
-                if (columnTop + childHeight > maxParentGivenHeight) {
+                if (columnTop + childHeight > maxParentAvaliableHeight) {
                     layoutFinish = true
                     lp.isInvisibleOutValidLayout = true
                     childView.visibility = ViewGroup.INVISIBLE
@@ -75,7 +74,7 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
                     visibleCount++
                     segment.layoutRows = visibleCount
                     childView.layout(columnleft, columnTop, columnleft + childWidth, columnTop + childHeight)
-                    childMaxHeight = Math.max(childMaxHeight, childHeight)
+                    childMaxHeight = childHeight
                     if (childView.visibility == ViewGroup.INVISIBLE) {
                         lp.isInvisibleOutValidLayout = false
                         childView.visibility = ViewGroup.VISIBLE
@@ -86,10 +85,11 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
             }
             rows++
             columnTop += childMaxHeight
-            logOf("dataIndex: ${dataIndex}, columnTop: ${columnTop}, childMaxHeight: ${childMaxHeight}, maxParentGivenHeight: ${markHeight}")
+            logOf("columnTop: ${columnTop}, dataIndex: ${dataIndex}, layoutHeight: ${columnTop + getPaddingBottom()}")
         }
-        fitSegment(segment, height = columnTop, start = start, size = visibleCount)
-        logOf("onLayout: ${System.currentTimeMillis() - startTime}, measureHeight: ${pagerView.measuredHeight}, layoutHeight: ${columnTop}")
+        val measureHeight = columnTop - getPaddingTop()
+        fitSegment(segment, height = measureHeight, start = start, size = visibleCount)
+        logOf("onLayout: ${System.currentTimeMillis() - startTime}, measureHeight: ${pagerView.measuredHeight}, layoutHeight: ${columnTop + getPaddingBottom()}")
     }
 
     private fun fitSegment(segment: Segment, height: Int, start: Int, size: Int) {

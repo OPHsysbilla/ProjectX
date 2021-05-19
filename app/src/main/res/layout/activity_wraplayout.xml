@@ -32,11 +32,12 @@
 
         <autoexclue.AutoPagerView
             android:id="@+id/wl_wl_content"
+            android:paddingTop="5dp"
+            android:paddingBottom="10dp"
             android:layout_width="match_parent"
             android:layout_height="400dp"
-            android:padding="10dp"
             android:background="@drawable/bg_wraplayout_content"
-            android:horizontalSpacing="10dp"
+            android:horizontalSpacing="0dp"
             android:verticalSpacing="0dp"
             app:wlyGravity="top" />
 

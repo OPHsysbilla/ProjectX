@@ -128,7 +128,7 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
             R.id.wl_sb_height -> {
                 val lp = mVContent!!.layoutParams
                 val p = progress * 1.0f / 100f
-                lp.height = (p * resources.displayMetrics.density * 1000 + 500).toInt()
+                lp.height = (p * resources.displayMetrics.density * 100 + 600).toInt()
                 mVContent!!.layoutParams = lp
                 mVContent!!.requestLayout()
             }
