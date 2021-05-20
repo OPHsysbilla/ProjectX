@@ -4,7 +4,6 @@ import am.widget.wraplayout.R
 import android.annotation.TargetApi
 import android.content.Context
 import android.graphics.Rect
-import android.text.Layout
 import android.util.AttributeSet
 import android.util.Log
 import android.util.SparseArray
@@ -250,7 +249,9 @@ open class AutoPagerView : ViewGroup {
         layoutMaster?.onLayoutWithInBounds(mLayoutState, changed, l, t, r, b)
     }
 
-    fun switchToPage(index: Int) = layoutMaster?.switchToPage(index, mLayoutState)
+    fun switchToPage(index: Int) = layoutMaster?.switchToPage(index)
+
+    fun scrollToPosition(dataIndex: Int) = layoutMaster?.scrollToPosition(dataIndex)
 
     fun getCurrentIndex() = layoutMaster?.getCurrentIndex() ?: 0
 
@@ -452,6 +453,7 @@ open class AutoPagerView : ViewGroup {
     }
 
     abstract class LayoutMaster {
+        var mPendingPosition: Int = -1
         protected var mWidthMode: Int = MeasureSpec.EXACTLY
         protected var mHeightMode: Int = MeasureSpec.EXACTLY
         protected var mWidth: Int = 0
@@ -629,13 +631,11 @@ open class AutoPagerView : ViewGroup {
 
         fun getCurrentIndex() = curSegIndex
 
-        fun switchToPage(index: Int, layoutState: LayoutState) {
+        fun switchToPage(index: Int) {
             val oldIndex = curSegIndex
             val newIndex = validDataSizeInSegment(index)
             if (oldIndex != newIndex) {
                 curSegIndex = index
-                layoutState.mPendingSwitchPage = index
-                layoutState.mPendingSwitchToDirection = if (newIndex > oldIndex) FILL_NEXT else FILL_PREV
                 mAutoPagerView?.post { mAutoPagerView?.requestLayout() }
             }
         }
@@ -687,12 +687,12 @@ open class AutoPagerView : ViewGroup {
 
         abstract fun onMeasureChildrens(layoutState: LayoutState, isInitMeasureAll: Boolean)
 
-        fun toPrevPage(layoutState: LayoutState) {
-            switchToPage(curSegIndex - 1, layoutState)
+        fun toPrevPage() {
+            switchToPage(curSegIndex - 1)
         }
 
-        fun toNextPage(layoutState: LayoutState) {
-            switchToPage(curSegIndex + 1, layoutState)
+        fun toNextPage() {
+            switchToPage(curSegIndex + 1)
         }
 
         fun checkPageCountConsistency(): Boolean {
@@ -724,6 +724,10 @@ open class AutoPagerView : ViewGroup {
 
         abstract fun onLayoutWithInBounds(layoutState: LayoutState, changed: Boolean, l: Int, t: Int, r: Int, b: Int)
         abstract fun layoutChildrens(layoutState: LayoutState)
+        fun scrollToPosition(dataIndex: Int) {
+            mPendingPosition = dataIndex
+            mAutoPagerView?.post { mAutoPagerView?.requestLayout() }
+        }
     }
 
 }

@@ -135,24 +135,12 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
         // when reach to the very end/start (aka. the first or last elemnt in whole data list)
         // that means as pageCount not matched, behave like we are RecyclerView#scrollToPosition(index)
 
-//        val pending = layoutState.mPendingSwitchPage
-//        val dir = layoutState.mPendingSwitchToDirection
-//
-//        if (pending >= 0 && curSegIndex == pending) {
-//            layoutState.mPendingSwitchPage = -1
-//            val pendingSegment = segmentAt(pending) ?: return
-//            if (layoutState.needComputeTotalPage) {
-//                if(dir == FILL_NEXT) {
-//                    for(i in IntProgression.fromClosedRange(pendingSegment.end + 1, getDataSize(), dir)) {
-//
-//                    }
-//                } else {
-//                    for(i in IntProgression.fromClosedRange(0, pendingSegment.start - 1, dir))
-//                }
-//            }
-//
-//        }
-        layoutPageOf(layoutState, curSegIndex)
+        val index = mPendingPosition
+        mPendingPosition = -1
+        val which = if(index >= 0) segments.find { it.start <= index && it.end > index } else null
+        val page = which?.let { segments.indexOf(it) } ?: curSegIndex
+        curSegIndex = page
+        layoutPageOf(layoutState, page)
     }
 
     private fun layoutPageOf(layoutState: AutoPagerView.LayoutState, pageIndex: Int) {

@@ -107,7 +107,9 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
             }
         }
         adapter.addDataList(a)
-        mVContent?.switchToPage(0)
+        val random = (Math.random() * a.size).toInt()
+        Log.d("AutoPagerView", "[! RANDOM PICK !] $random")
+        mVContent?.scrollToPosition(random)
     }
 
     var adapter = AutoPageAdapter()
