@@ -541,7 +541,6 @@ open class AutoPagerView : ViewGroup {
         }
 
         companion object {
-
             @JvmStatic
             fun chooseDesiredSize(spec: Int, desired: Int, min: Int): Int {
                 val mode = MeasureSpec.getMode(spec)

@@ -130,13 +130,18 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
     }
 
     override fun dispatchLayout(layoutState: AutoPagerView.LayoutState) {
-        val pending = layoutState.mPendingSwitchPage
-        val dir = layoutState.mPendingSwitchToDirection
+        // TODO: FIX it: mPendingSwitchPage will be able to scroll to the target position
+        // Always put mPendingSwitchPosition at the first one
+        // when reach to the very end/start (aka. the first or last elemnt in whole data list)
+        // that means as pageCount not matched, behave like we are RecyclerView#scrollToPosition(index)
+
+//        val pending = layoutState.mPendingSwitchPage
+//        val dir = layoutState.mPendingSwitchToDirection
 //
-        if (pending >= 0 && curSegIndex == pending) {
-            layoutState.mPendingSwitchPage = -1
-            val pendingSegment = segmentAt(pending) ?: return
-            if (layoutState.needComputeTotalPage) {
+//        if (pending >= 0 && curSegIndex == pending) {
+//            layoutState.mPendingSwitchPage = -1
+//            val pendingSegment = segmentAt(pending) ?: return
+//            if (layoutState.needComputeTotalPage) {
 //                if(dir == FILL_NEXT) {
 //                    for(i in IntProgression.fromClosedRange(pendingSegment.end + 1, getDataSize(), dir)) {
 //
@@ -144,9 +149,9 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
 //                } else {
 //                    for(i in IntProgression.fromClosedRange(0, pendingSegment.start - 1, dir))
 //                }
-            }
-
-        }
+//            }
+//
+//        }
         layoutPageOf(layoutState, curSegIndex)
     }
 
