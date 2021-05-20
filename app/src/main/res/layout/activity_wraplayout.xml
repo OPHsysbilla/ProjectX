@@ -30,10 +30,8 @@
 
         </FrameLayout>
 
-        <autoexclue.AutoPagerView
+        <autoexclue.FlingPagerView
             android:id="@+id/wl_wl_content"
-            android:paddingTop="5dp"
-            android:paddingBottom="10dp"
             android:layout_width="match_parent"
             android:layout_height="400dp"
             android:background="@drawable/bg_wraplayout_content"

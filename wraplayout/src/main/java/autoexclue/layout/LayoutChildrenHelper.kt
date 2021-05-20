@@ -10,7 +10,7 @@ interface LayoutChildrenHelper {
 
     fun getChildAt(i: Int): View?
     fun getChildrenCount(): Int
-    fun preMeasureChild(context: Context, index: Int): Int
+    fun preMeasureChild(index: Int): Int
     fun removeAllViews()
     fun getViewOf(dataIndex: Int): View?
     fun removeView(childView: View)

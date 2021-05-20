@@ -1,17 +1,23 @@
 package autoexclue
 
 data class Segment constructor(
-        var layoutRows: Int = 0,
-        var measureRows: Int = 0,
-        var measureStart: Int = 0,
-        var measureSize: Int = 0,
-        var measureEnd: Int = 0,
-        var height: Int = 0,
-        var width: Int = 0,
         var start: Int = 0,
         var end: Int = 0,
-        var size: Int = 0
-)
+        var size: Int = start + end,
+        var layoutRows: Int = 0,
+        var height: Int = 0,
+        var width: Int = 0,
+) {
+    override fun toString(): String {
+        return "[$start~$end=$size]"
+    }
+}
+
+fun Segment?.rangeEquals(other: Segment?): Boolean {
+    if (this == other) return true
+    if (other == null || this == null) return false
+    return this.start == other.start && this.end == other.end && this.size == other.size
+}
 
 fun Segment.reset() {
     this.start = 0

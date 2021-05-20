@@ -1,25 +1,46 @@
 package autoexclue.layout
 
 import android.view.ViewGroup
+import android.widget.LinearLayout
+import androidx.annotation.IntDef
 import autoexclue.AutoPagerView
 import autoexclue.AutoPagerView.Companion.logOf
 import autoexclue.Segment
+import java.lang.StringBuilder
 
 /**
  * Created by lei.jialin on 2021/5/19
  */
-class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
+class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.LayoutMaster() {
+
+    companion object {
+        const val HORIZONTAL = LinearLayout.HORIZONTAL
+        const val VERTICAL = LinearLayout.VERTICAL
+
+        /** @hide
+         */
+        @IntDef(HORIZONTAL, VERTICAL)
+        @kotlin.annotation.Retention
+        annotation class Orientation
+    }
+
     var callbackPageIndex: ((String) -> Unit)? = null
+
+
+    override fun canScrollHorizontally(): Boolean = mOrientation == HORIZONTAL
+    override fun canScrollVertically(): Boolean = mOrientation == VERTICAL
+
 
     protected fun layoutChunk(layoutState: AutoPagerView.LayoutState, segment: Segment, pre: Segment?) {
         val pagerView = mAutoPagerView ?: return
 
         val startTime = System.currentTimeMillis()
         mChildrenHelper?.removeAllViews()
-        val isOnlyMeasure = layoutState.isOnlyMeasure()
+        val isMeasureAll = layoutState.isInitMeasureAll()
 
         var columnTop = getPaddingTop()
         val maxParentAvaliableHeight = mHeight - getPaddingBottom() - getPaddingTop() + columnTop
+        val recordSegmentSize = segment.size
 
         var visibleCount = 0
         var start = pre?.end ?: 0
@@ -35,11 +56,11 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
             var column = 0
             while (column < numColumn) {
 
-                if(rows > 0 && !layoutFinish) columnTop += getVerticalSpacing()
-                if(column > 0 && !layoutFinish) columnleft += getHorizontalSpacing()
+                if (rows > 0 && !layoutFinish) columnTop += getVerticalSpacing()
+                if (column > 0 && !layoutFinish) columnleft += getHorizontalSpacing()
                 var childHeight = 0
-                if (isOnlyMeasure) {
-                    childHeight = mChildrenHelper?.preMeasureChild(pagerView.context, dataIndex)
+                if (isMeasureAll) {
+                    childHeight = mChildrenHelper?.preMeasureChild(dataIndex)
                             ?: 0
                     val curRowHeight = childHeight
                     if (columnTop + curRowHeight <= maxParentAvaliableHeight) {
@@ -61,9 +82,7 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
                 measureChildWithMargins(childView, 0, 0)
 
                 val childWidth = childView.measuredWidth
-                if (layoutState.isStepLayout()) {
-                    childHeight = childView.measuredHeight
-                }
+                childHeight = childView.measuredHeight
                 val lp = childView.layoutParams as AutoPagerView.LayoutParams
                 if (columnTop + childHeight > maxParentAvaliableHeight) {
                     layoutFinish = true
@@ -72,7 +91,6 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
                     mChildrenHelper?.removeView(childView)
                 } else if (!layoutFinish) {
                     visibleCount++
-                    segment.layoutRows = visibleCount
                     childView.layout(columnleft, columnTop, columnleft + childWidth, columnTop + childHeight)
                     childMaxHeight = childHeight
                     if (childView.visibility == ViewGroup.INVISIBLE) {
@@ -87,9 +105,13 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
             columnTop += childMaxHeight
 //            logOf("columnTop: ${columnTop}, dataIndex: ${dataIndex}, layoutHeight: ${columnTop + getPaddingBottom()}")
         }
+        segment.layoutRows = visibleCount
+        if (recordSegmentSize != visibleCount) {
+            layoutState.needComputeTotalPage = true
+        }
         val measureHeight = columnTop - getPaddingTop()
         fitSegment(segment, height = measureHeight, start = start, size = visibleCount)
-        logOf("onLayout: ${System.currentTimeMillis() - startTime}, measureHeight: ${pagerView.measuredHeight}, layoutHeight: ${columnTop + getPaddingBottom()}")
+        logOf("layoutChunk: ${System.currentTimeMillis() - startTime}, measureHeight: ${pagerView.measuredHeight}, layoutHeight: ${columnTop + getPaddingBottom()}")
     }
 
     private fun fitSegment(segment: Segment, height: Int, start: Int, size: Int) {
@@ -98,90 +120,100 @@ class LinearLayoutMaster : AutoPagerView.LayoutMaster() {
         segment.start = start
         segment.size = size
         segment.end = segment.start + segment.size
-        segment.layoutRows = size
-        segment.measureRows = size
     }
 
     override fun dispatchLayout(layoutState: AutoPagerView.LayoutState) {
         getCurSegment()?.let { cur: Segment ->
             val pre = segmentAt(curSegIndex - 1)
             layoutChunk(layoutState, cur, pre)
-            onLayoutFinish()
+            onLayoutFinish(cur)
         }
     }
 
-    private fun onLayoutFinish() {
-        val c = getCurSegment()
-        logOf("onLayoutFinish: pageindex: ${curSegIndex + 1}/${segments.size}， " +
-                "curpage [start - end]:[${c?.start} - ${c?.end}]， [segSize//dataSize]: [${c?.size}//${getDataSize()}]")
+    override fun layoutChildrens(layoutState: AutoPagerView.LayoutState) {
+        if (layoutState.isStepLayout()) return
+        layoutState.mStep = AutoPagerView.LayoutState.Step.Layout
+        dispatchLayout(layoutState)
+        layoutState.mStep = AutoPagerView.LayoutState.Step.None
+//        if (checkPageCountConsistency() != true) {
+//            layoutMaster?.markPageNotConsistency(mLayoutState)
+//            layoutMaster?.measureChildrens(mLayoutState)
+//        }
+    }
 
+    override fun onLayoutWithInBounds(layoutState: AutoPagerView.LayoutState, changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+        val startTime = System.currentTimeMillis()
+        layoutChildrens(layoutState)
+//        if(layoutState.needComputeTotalPage) {
+//            markPageNotConsistency(layoutState)
+//            measureChildrens(layoutState)
+//            layoutChildrens(layoutState)
+//        }
+        logOf("onLayout: ${System.currentTimeMillis() - startTime}")
+    }
+
+    private fun onLayoutFinish(c: Segment) {
+        logOf("onLayoutFinish: page: ${curSegIndex + 1}/${getTotalPageCount()}， " +
+                "cur[start-end-layoutRows]:[${c.start} - ${c.end} ~ ${c.layoutRows}]， [segSize-dataSize]: [${c.size}-${getDataSize()}]")
 
         callbackPageIndex?.invoke("${curSegIndex + 1}/${segments.size}")
     }
 
-    private fun preMeasurePage(layoutState: AutoPagerView.LayoutState, pageWantToMeasure: Int,
-                               measureSize: Int = AutoPagerView.MAX_PER_MEASURE_CNT) {
-        val cur = segmentAt(pageWantToMeasure)
-        val pre = segmentAt(pageWantToMeasure - 1)
-        val dataIndex = if (layoutState.isMeasureAll) 0 else pre?.end ?: 0
-        val rangeEnd = if (layoutState.isMeasureAll) getDataSize() else Math.min(dataIndex + measureSize, getDataSize())
-        generateSegments(layoutState = layoutState, pageIndex = pageWantToMeasure, rangeStart = dataIndex, rangeEnd = rangeEnd)
+    override fun onMeasureChildrens(layoutState: AutoPagerView.LayoutState, isInitMeasureAll: Boolean) {
+        if (isInitMeasureAll) {
+            generateSegments(layoutState = layoutState, pageIndex = curSegIndex, rangeStart = 0,
+                    rangeEnd = getDataSize())
+            logOf("generateSegments: pageCount: ${segments.size}, MeasureAll: ${layoutState.isInitMeasureAll()}, segment: ${printSegment()}")
+        } else {
+            measureOnePage(layoutState, curSegIndex)
+            logOf("one-seg-measure: cur:${getCurSegment()?.toString()}, MeasureAll: ${layoutState.isInitMeasureAll()}, segment: ${printSegment()}")
+        }
     }
 
-    override fun onMeasure(mLayoutState: AutoPagerView.LayoutState) {
-        preMeasurePage(mLayoutState, pageWantToMeasure = curSegIndex)
+    private fun measureOnePage(layoutState: AutoPagerView.LayoutState, pageIndex: Int) {
+        val cur = segmentAt(pageIndex)
+        val pre = segmentAt(pageIndex - 1)
+        val preEnd = pre?.end
+        val rangeStart = preEnd ?: cur?.start ?: 0
+//        val measureSize: Int = AutoPagerView.MAX_PER_MEASURE_CNT
+//        val rangeEnd = Math.min(rangeStart + measureSize, getDataSize())
+        generateOneSegment(page =  pageIndex, layoutState = layoutState, dataIndex = rangeStart)
     }
 
     private fun generateSegments(layoutState: AutoPagerView.LayoutState, pageIndex: Int, rangeStart: Int, rangeEnd: Int) {
         var page = pageIndex
         var dataIndex = rangeStart
-        val defaultMeasureSize = AutoPagerView.MAX_PER_MEASURE_CNT
+
         while (dataIndex < rangeEnd) {
-            val reuseSegment = tempMeasureSegments.get(page, Segment(0, 0, 0))
-            reuseSegment.start = dataIndex
-            reuseSegment.size = defaultMeasureSize
-            reuseSegment.end = dataIndex + defaultMeasureSize
-            tempMeasureSegments.put(page, reuseSegment)
-            if (page < segments.size) {
-                segments[page] = reuseSegment
-            } else segments.add(reuseSegment)
-            layoutChunk(layoutState, reuseSegment, segmentAt(page - 1))
-            dataIndex += reuseSegment.size
+            val reuseSegment = generateOneSegment(page, layoutState, dataIndex)
+            val count = reuseSegment.size
+            logOf("one-seg-gen: dataIndex + size: $dataIndex + ${reuseSegment.size} , rangeEnd:$rangeEnd, dataIndex < rangeEnd: ${dataIndex < rangeEnd},MeasureAll: ${layoutState.isInitMeasureAll()}, segment: ${printSegment()}")
+
+            if (count == 0) break
+            dataIndex += count
             page++
         }
     }
 
-    private fun measureOnePage(measureAll: Boolean, segment: Segment) {
-        val pagerView = mAutoPagerView ?: return
-        val paddingTop = getPaddingTop()
-        val paddingBottom = getPaddingBottom()
-        var collectHeight = 0
-        val collectWidth = 0
-        var rows = 0
-        val childCount = segment.measureSize
-        if (childCount > 0) {
-            val maxItemsHeight = mHeight - paddingTop - paddingBottom
-            val end = Math.min(segment.measureEnd, getDataSize())
-            for (index in segment.start until end) {
-                val childHeight: Int = if (measureAll) {
-                    mChildrenHelper?.preMeasureChild(pagerView.context, index) ?: 0
-                } else {
-                    val child = mChildrenHelper?.getViewOf(index) ?: continue
-                    if (mChildrenHelper?.isViewGone(child) == true) continue
-                    measureChildWithMargins(child, 0, 0)
-                    child.measuredHeight
-                }
-                val curRowHeight = if (rows == 0) childHeight else getVerticalSpacing() + childHeight
-                if (collectHeight + curRowHeight <= maxItemsHeight) {
-                    collectHeight += curRowHeight
-                    rows++
-                }
-            }
-        }
-        segment.height = collectHeight
-        segment.width = collectWidth
-        segment.measureSize = rows
-        segment.measureRows = rows
-        segment.measureEnd = segment.measureStart + segment.measureSize
+    private fun generateOneSegment(page: Int, layoutState: AutoPagerView.LayoutState, dataIndex: Int, defaultMeasureSize: Int = AutoPagerView.MAX_PER_MEASURE_CNT): Segment {
+        val reuseSegment = tempMeasureSegments.get(page, Segment(0, 0, 0))
+        reuseSegment.start = dataIndex
+        reuseSegment.size = defaultMeasureSize
+        reuseSegment.end = dataIndex + defaultMeasureSize
+        if (page < segments.size) {
+            segments[page] = reuseSegment
+        } else segments.add(reuseSegment)
+        tempMeasureSegments.put(page, reuseSegment)
+        layoutChunk(layoutState, reuseSegment, segmentAt(page - 1))
+        return reuseSegment
     }
+
+    private fun printSegment(): String {
+        sb.setLength(0)
+        segments.forEach { sb.append(it.toString()) }
+        return sb.toString()
+    }
+
+
+    protected val sb: StringBuilder = StringBuilder()
 }

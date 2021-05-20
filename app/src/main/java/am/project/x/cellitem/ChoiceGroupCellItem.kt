@@ -25,7 +25,7 @@ class ChoiceGroupCellItem(
             .inflate(R.layout.exercisescope_single_choice_select, viewGroup, false)
     }
 
-    override fun firstAssumeMeasureHeight(context: Context): Int = 60
+    override fun firstAssumeMeasureHeight(context: Context): Int = 174
 
     override val pagerViewHolderCreator: IPagerViewHolderCreator<ChoiceGroupCellItem.ViewHolder> =
         pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }

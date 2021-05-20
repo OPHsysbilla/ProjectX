@@ -63,9 +63,9 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
         gravity.setOnCheckedChangeListener(this)
         gravity.check(R.id.wl_rb_top)
         horizontal.setOnSeekBarChangeListener(this)
-        horizontal.progress = 15
+        horizontal.progress = 0
         vertical.setOnSeekBarChangeListener(this)
-        vertical.progress = 15
+        vertical.progress = 0
         height.setOnSeekBarChangeListener(this)
         height.progress = 15
         initAutoLayout()

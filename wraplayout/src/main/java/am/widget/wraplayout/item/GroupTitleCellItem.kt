@@ -20,7 +20,7 @@ class GroupTitleCellItem(private val index: Int, private val str: String?) : Abs
 
     }
 
-    override fun firstAssumeMeasureHeight(context: Context): Int = 33
+    override fun firstAssumeMeasureHeight(context: Context): Int = 87
 
     override val pagerViewHolderCreator: IPagerViewHolderCreator<ViewHolder> = pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }
     override val layoutRes: Int
