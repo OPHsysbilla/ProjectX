@@ -9,6 +9,8 @@ import android.view.ViewConfiguration
 
 /**
  * Created by lei.jialin on 2021/5/20
+ *
+ * 支持手势滑动上下翻页的墨水屏分页view
  */
 class FlingPagerView @JvmOverloads constructor(
         context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0

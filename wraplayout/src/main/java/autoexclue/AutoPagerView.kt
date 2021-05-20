@@ -18,6 +18,10 @@ import kotlin.collections.ArrayList
 
 /**
  * Created by lei.jialin on 2021/4/19
+ * 自动分页的控件
+ * 【注意⚠️】：1.需要预设ViewHolder高度来初始化总页数 {@link autoexclue.AutoPagerView.ViewHolder#firstPresetHeight()}
+ *             不预设高度会导致一直往后翻时总页数在增加的情况
+ *           2.为了需要显示总页数增加了很多额外计算，第一次测量时会预估所有项的预设高度值。
  *
  * TODO:
  * 1. 增加 titleDecoration
