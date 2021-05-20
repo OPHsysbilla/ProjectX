@@ -16,4 +16,5 @@ interface LayoutChildrenHelper {
     fun removeView(childView: View)
     fun addView(childView: View)
     fun isViewGone(child: View): Boolean
+    fun onChildAdded(dataIndex: Int, childWidth: Int, childHeight: Int)
 }

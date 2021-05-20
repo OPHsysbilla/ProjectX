@@ -20,8 +20,6 @@ class GroupTitleCellItem(val index: Int, val str: String?) : AbstractCellItem<Gr
 
     }
 
-    override fun firstAssumeMeasureHeight(context: Context): Int = 87
-
     override val pagerViewHolderCreator: IPagerViewHolderCreator<ViewHolder> = pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }
     override val layoutRes: Int
         get() = R.layout.layout_group_title_cell
@@ -30,4 +28,6 @@ class GroupTitleCellItem(val index: Int, val str: String?) : AbstractCellItem<Gr
         val tv: TextView = itemView.findViewById(R.id.tv_item_simple_text)
         val tvLastExercise: TextView = itemView.findViewById(R.id.tv_last_exercise)
     }
+
+    override fun firstPresetHeight(context: Context): Int  = 87
 }

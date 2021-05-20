@@ -229,9 +229,9 @@ class FlingPagerView @JvmOverloads constructor(
         val range = computeVerticalScrollRange()
         if (range == 0 || distance == 0) return false
         if (distance < 0) {
-            lm.toPrevPage()
+            lm.toPrevPage(mLayoutState)
         } else {
-            lm.toNextPage()
+            lm.toNextPage(mLayoutState)
         }
         return true
     }
@@ -241,9 +241,9 @@ class FlingPagerView @JvmOverloads constructor(
         val range = computeHorizontalScrollRange()
         if (range == 0 || distance == 0) return false
         if (distance < 0) {
-            lm.toPrevPage()
+            lm.toPrevPage(mLayoutState)
         } else {
-            lm.toNextPage()
+            lm.toNextPage(mLayoutState)
         }
         return true
     }
@@ -255,9 +255,9 @@ class FlingPagerView @JvmOverloads constructor(
         val lm = layoutMaster
                 ?: throw IllegalArgumentException("scrollOnePage: no layoutMaster been attached. ")
         if (direction < 0) {
-            lm.toPrevPage()
+            lm.toPrevPage(mLayoutState)
         } else {
-            lm.toNextPage()
+            lm.toNextPage(mLayoutState)
         }
     }
 }

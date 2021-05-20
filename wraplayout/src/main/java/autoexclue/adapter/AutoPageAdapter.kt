@@ -101,7 +101,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
     }
 
     var callbackHeight: ((dataIndex: Int) -> Int)? = null
-    override fun measureHeightAt(context: Context, index: Int): Int = displyItems.getOrNull(index)?.firstAssumeMeasureHeight(context)
+    override fun measureHeightAt(context: Context, index: Int): Int = displyItems.getOrNull(index)?.firstPresetHeight(context)
             ?: 0
     //</editor-fold>
 

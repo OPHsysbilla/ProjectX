@@ -20,11 +20,6 @@ class HeadTextCellItem(val str: String?) : AbstractCellItem<HeadTextCellItem.Vie
         holder.tv.text = str
     }
 
-    override fun firstAssumeMeasureHeight(context: Context): Int =
-            TypedValue.applyDimension(
-            TypedValue.COMPLEX_UNIT_DIP, 162f,
-            context.resources.displayMetrics).toInt()
-
     override val pagerViewHolderCreator: IPagerViewHolderCreator<ViewHolder> = pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }
     override val layoutRes: Int
         get() = R.layout.layout_cement_head_text
@@ -32,4 +27,9 @@ class HeadTextCellItem(val str: String?) : AbstractCellItem<HeadTextCellItem.Vie
     class ViewHolder internal constructor(itemView: View) : AutoPagerView.ViewHolder(itemView) {
         val tv: TextView = itemView.findViewById(R.id.head_text)
     }
+
+    override fun firstPresetHeight(context: Context): Int =
+            TypedValue.applyDimension(
+                    TypedValue.COMPLEX_UNIT_DIP, 162f,
+                    context.resources.displayMetrics).toInt()
 }

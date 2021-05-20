@@ -4,6 +4,7 @@ import am.widget.wraplayout.R
 import android.annotation.TargetApi
 import android.content.Context
 import android.graphics.Rect
+import android.text.Layout
 import android.util.AttributeSet
 import android.util.Log
 import android.util.SparseArray
@@ -25,6 +26,8 @@ import kotlin.collections.ArrayList
  */
 open class AutoPagerView : ViewGroup {
     companion object {
+        const val FILL_PREV = -1
+        const val FILL_NEXT = 1
         const val MAX_PER_MEASURE_CNT = 10
         private val ATTRS = intArrayOf(android.R.attr.horizontalSpacing,
                 android.R.attr.verticalSpacing)
@@ -140,6 +143,7 @@ open class AutoPagerView : ViewGroup {
     }
 
     class LayoutState {
+
         enum class Step {
             None,
             MeasureAll,
@@ -150,6 +154,11 @@ open class AutoPagerView : ViewGroup {
         fun isDuringMeasure(): Boolean = mStep == Step.Measure || isInitMeasureAll()
         fun isStepLayout(): Boolean = mStep == Step.Layout
         fun isInitMeasureAll(): Boolean = mStep == Step.MeasureAll
+        fun defaultMeasureSize(): Int = if (maxLayoutRow > 0) maxLayoutRow else AutoPagerView.MAX_PER_MEASURE_CNT
+
+        var maxLayoutRow: Int = -1
+        var mPendingSwitchPage: Int = -1
+        var mPendingSwitchToDirection: Int = FILL_NEXT
 
         var nextTimeMeasureAll = false
         var mStep: Step = Step.None
@@ -199,6 +208,11 @@ open class AutoPagerView : ViewGroup {
     private val vhCache: SparseArray<ViewHolder> = SparseArray()
 
     private fun tryObtainViewHolder(index: Int): ViewHolder? {
+        val cache = obtainViewHolderCache(index)
+        return cache ?: createNewViewHolder(index)
+    }
+
+    private fun createNewViewHolder(index: Int): ViewHolder? {
         val holder = adapter?.onCreateViewHolderAt(index, this)
         val lp = holder?.itemView?.layoutParams
         val aeLayoutParams: LayoutParams
@@ -236,7 +250,7 @@ open class AutoPagerView : ViewGroup {
         layoutMaster?.onLayoutWithInBounds(mLayoutState, changed, l, t, r, b)
     }
 
-    fun switchToPage(index: Int) = layoutMaster?.switchToPage(index)
+    fun switchToPage(index: Int) = layoutMaster?.switchToPage(index, mLayoutState)
 
     fun getCurrentIndex() = layoutMaster?.getCurrentIndex() ?: 0
 
@@ -281,15 +295,32 @@ open class AutoPagerView : ViewGroup {
 
             override fun addView(childView: View) = this@AutoPagerView.addView(childView)
             override fun isViewGone(child: View): Boolean = this@AutoPagerView.isViewGone(child)
+            override fun onChildAdded(dataIndex: Int, childWidth: Int, childHeight: Int) = this@AutoPagerView.onChildAdded(dataIndex, childWidth, childHeight)
         }
     }
 
-    private fun preMeasureChild(index: Int): Int {
-        val presetHeight = adapter?.measureHeightAt(context, index) ?: 0
-        val vh = tryObtainViewHolder(index)
-        val measureHeight = vh?.itemView?.measuredHeight ?: 0
-        return if (measureHeight > 0) measureHeight else presetHeight
+    private fun onChildAdded(dataIndex: Int, childWidth: Int, childHeight: Int) {
+        val vh = obtainViewHolderCache(dataIndex)
+        val lp = vh?.itemView?.layoutParams as LayoutParams
+        lp.setLayoutHeight(childWidth, childHeight)
     }
+
+    private fun preMeasureChild(index: Int): Int {
+        val vh = tryObtainViewHolder(index)
+        val itemView = vh?.itemView
+        val measureHeight = itemView?.measuredHeight
+        val lp = itemView?.layoutParams as? LayoutParams
+        val previousLayoutHeight = lp?.layoutHeight
+        val presetHeight = adapter?.measureHeightAt(context, index)
+        return when {
+            previousLayoutHeight.isPositive() -> previousLayoutHeight.validInt()
+            measureHeight.isPositive() -> measureHeight.validInt()
+            else -> presetHeight ?: 0
+        }
+    }
+
+    fun Int?.isPositive() = this != null && this > 0
+    fun Int?.validInt() = this ?: 0
 
 
     //<editor-fold desc="measure child decorate">
@@ -310,6 +341,13 @@ open class AutoPagerView : ViewGroup {
      * Per-child layout information associated with AutoExcludeLayout.
      */
     class LayoutParams : MarginLayoutParams {
+        var layoutHeight: Int = 0
+        var layoutWidth: Int = 0
+        fun setLayoutHeight(childWidth: Int, childHeight: Int) {
+            layoutHeight = childHeight
+            layoutWidth = childWidth
+        }
+
         val mDecorInsets = Rect()
         var mViewHolder: ViewHolder? = null
         var isWithinValidLayout = false
@@ -462,7 +500,7 @@ open class AutoPagerView : ViewGroup {
                 mWidth = autoPagerView.width
                 mHeight = autoPagerView.height
             }
-            mWidthMode = MeasureSpec.EXACTLY
+            mWidthMode = View.MeasureSpec.EXACTLY
             mHeightMode = MeasureSpec.EXACTLY
         }
 
@@ -503,6 +541,7 @@ open class AutoPagerView : ViewGroup {
         }
 
         companion object {
+
             @JvmStatic
             fun chooseDesiredSize(spec: Int, desired: Int, min: Int): Int {
                 val mode = MeasureSpec.getMode(spec)
@@ -591,11 +630,13 @@ open class AutoPagerView : ViewGroup {
 
         fun getCurrentIndex() = curSegIndex
 
-        fun switchToPage(index: Int) {
+        fun switchToPage(index: Int, layoutState: LayoutState) {
             val oldIndex = curSegIndex
             val newIndex = validDataSizeInSegment(index)
             if (oldIndex != newIndex) {
-                curSegIndex = newIndex
+                curSegIndex = index
+                layoutState.mPendingSwitchPage = index
+                layoutState.mPendingSwitchToDirection = if (newIndex > oldIndex) FILL_NEXT else FILL_PREV
                 mAutoPagerView?.post { mAutoPagerView?.requestLayout() }
             }
         }
@@ -647,12 +688,12 @@ open class AutoPagerView : ViewGroup {
 
         abstract fun onMeasureChildrens(layoutState: LayoutState, isInitMeasureAll: Boolean)
 
-        fun toPrevPage() {
-            switchToPage(curSegIndex - 1)
+        fun toPrevPage(layoutState: LayoutState) {
+            switchToPage(curSegIndex - 1, layoutState)
         }
 
-        fun toNextPage() {
-            switchToPage(curSegIndex + 1)
+        fun toNextPage(layoutState: LayoutState) {
+            switchToPage(curSegIndex + 1, layoutState)
         }
 
         fun checkPageCountConsistency(): Boolean {
