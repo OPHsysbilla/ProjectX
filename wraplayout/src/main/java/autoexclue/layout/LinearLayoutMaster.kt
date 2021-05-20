@@ -1,5 +1,6 @@
 package autoexclue.layout
 
+import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import androidx.annotation.IntDef
@@ -84,7 +85,8 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
                 val childWidth = childView.measuredWidth
                 childHeight = childView.measuredHeight
                 val lp = childView.layoutParams as AutoPagerView.LayoutParams
-                if (columnTop + childHeight > maxParentAvaliableHeight) {
+                if (columnTop + childHeight > maxParentAvaliableHeight
+                        || layoutFinish && childView.visibility == View.VISIBLE) {
                     layoutFinish = true
                     lp.isInvisibleOutValidLayout = true
                     childView.visibility = ViewGroup.INVISIBLE
@@ -118,8 +120,7 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
         segment.height = height
         segment.width = mWidth
         segment.start = start
-        segment.size = size
-        segment.end = segment.start + segment.size
+        segment.addEnd(size)
     }
 
     override fun dispatchLayout(layoutState: AutoPagerView.LayoutState) {
@@ -177,7 +178,7 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
         val rangeStart = preEnd ?: cur?.start ?: 0
 //        val measureSize: Int = AutoPagerView.MAX_PER_MEASURE_CNT
 //        val rangeEnd = Math.min(rangeStart + measureSize, getDataSize())
-        generateOneSegment(page =  pageIndex, layoutState = layoutState, dataIndex = rangeStart)
+        generateOneSegment(page = pageIndex, layoutState = layoutState, dataIndex = rangeStart)
     }
 
     private fun generateSegments(layoutState: AutoPagerView.LayoutState, pageIndex: Int, rangeStart: Int, rangeEnd: Int) {
@@ -195,11 +196,18 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
         }
     }
 
+    private fun validDataIndex(index: Int) = Math.max(0, Math.min(index, getDataSize()))
+
+    fun Segment?.addEnd(index: Int) {
+        this ?: return
+        this.end = validDataIndex(this.start + index)
+        this.size = Math.max(0, this.end - this.start)
+    }
+
     private fun generateOneSegment(page: Int, layoutState: AutoPagerView.LayoutState, dataIndex: Int, defaultMeasureSize: Int = AutoPagerView.MAX_PER_MEASURE_CNT): Segment {
         val reuseSegment = tempMeasureSegments.get(page, Segment(0, 0, 0))
         reuseSegment.start = dataIndex
-        reuseSegment.size = defaultMeasureSize
-        reuseSegment.end = dataIndex + defaultMeasureSize
+        reuseSegment.addEnd(defaultMeasureSize)
         if (page < segments.size) {
             segments[page] = reuseSegment
         } else segments.add(reuseSegment)

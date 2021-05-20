@@ -3,7 +3,7 @@ package autoexclue
 data class Segment constructor(
         var start: Int = 0,
         var end: Int = 0,
-        var size: Int = start + end,
+        var size: Int = Math.max(0, end - start),
         var layoutRows: Int = 0,
         var height: Int = 0,
         var width: Int = 0,

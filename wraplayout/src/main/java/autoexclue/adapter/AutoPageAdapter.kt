@@ -1,5 +1,6 @@
 package autoexclue.adapter
 
+import am.widget.wraplayout.item.GroupTitleCellItem
 import android.content.Context
 import android.util.Pair
 import android.util.SparseArray
@@ -107,6 +108,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
     override fun bindData2ViewHolder(index: Int, vh: AutoPagerView.ViewHolder, parent: ViewGroup) {
         val item = displyItems.getOrNull(index) as? AbstractCellItem<AutoPagerView.ViewHolder>
                 ?: return
+        val group = (item as? GroupTitleCellItem)?.index
         item.onBindViewHolder(vh, parent)
     }
 
