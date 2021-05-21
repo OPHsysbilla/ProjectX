@@ -27,7 +27,7 @@
         android:maxLines="1"
         app:layout_constraintLeft_toRightOf="@id/tv_last_exercise"
         android:text="哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈哈"
-        android:textColor="#BEBEBE"
+        android:textColor="@android:color/black"
         app:layout_constraintRight_toRightOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

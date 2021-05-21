@@ -1,6 +1,5 @@
 package autoexclue.layout
 
-import android.content.Context
 import android.view.View
 
 /**
@@ -11,9 +10,9 @@ interface LayoutChildrenHelper {
     fun getChildAt(i: Int): View?
     fun getChildrenCount(): Int
     fun preMeasureChild(index: Int): Int
-    fun removeAllViews()
+    fun removeAllChildOnScreen()
     fun getViewOf(dataIndex: Int): View?
-    fun removeView(childView: View)
+    fun removeChild(childView: Int, childView1: View)
     fun addView(childView: View)
     fun isViewGone(child: View): Boolean
     fun onChildAdded(dataIndex: Int, childWidth: Int, childHeight: Int)

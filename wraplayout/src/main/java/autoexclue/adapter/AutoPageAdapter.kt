@@ -27,6 +27,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
         val item = displyItems.getOrNull(index) ?: throw IllegalAccessException(" out of box~ ")
         val viewHolder =  displyItems.viewHolderFactory.create(item.viewType, parent)
         viewHolder.mPosition = index
+        viewHolder.viewType = item.viewType
         eventHookHelper.bind(viewHolder, this)
         return viewHolder
     }
@@ -232,5 +233,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
                     viewHolder: AutoPagerView.ViewHolder,
                     model: AbstractCellItem<*>?)
     }
+
+    override fun itemViewType(index: Int): Int =  displyItems.getOrNull(index)?.viewType ?: -1
     //</editor-fold>
 }

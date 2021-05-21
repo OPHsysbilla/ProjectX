@@ -102,14 +102,18 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
         for (i in 0 until groupSize) {
             val size = RandomUtils.nextInt(1, 10)
             a.add(GroupTitleCellItem(i, "Group Title ${i}: " + RandomUtils.nextInt(0, 99999), acc))
+            acc++
+
             for (j in 0 until size) {
                 a.add(TestCellItem(j, "belong Group${i} : " + RandomUtils.nextDouble(), acc))
+                acc++
             }
         }
         adapter.addDataList(a)
         val random = (Math.random() * a.size).toInt()
         Log.d("AutoPagerView", "[! RANDOM PICK !] $random/${a.size}")
         mVContent?.scrollToPosition(random)
+        tv_total_height.text = "random: " + random
     }
 
     var adapter = AutoPageAdapter()
