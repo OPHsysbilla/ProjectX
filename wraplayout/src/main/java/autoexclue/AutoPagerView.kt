@@ -36,6 +36,7 @@ open class AutoPagerView : ViewGroup {
                 android.R.attr.verticalSpacing)
 
         fun logOf(s: String) {
+            if(s.contains("time"))
             Log.d("AutoPagerView", s)
         }
     }
@@ -154,11 +155,12 @@ open class AutoPagerView : ViewGroup {
             Layout,
         }
 
-        fun isDuringMeasure(): Boolean = mStep == Step.Measure || isInitMeasureAll()
+        fun isNormalMeasure(): Boolean = mStep == Step.Measure
         fun isStepLayout(): Boolean = mStep == Step.Layout
         fun isInitMeasureAll(): Boolean = mStep == Step.MeasureAll
         fun defaultMeasureSize(): Int = if (maxLayoutRow > 0) maxLayoutRow else AutoPagerView.MAX_PER_MEASURE_CNT
 
+        var beenLayoutAtLeastOnce: Boolean = false
         var maxLayoutRow: Int = -1
         var mPendingSwitchPage: Int = -1
         var mPendingSwitchToDirection: Int = FILL_NEXT
@@ -174,12 +176,11 @@ open class AutoPagerView : ViewGroup {
 
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        mLayoutState.mStep = LayoutState.Step.Measure
         val measureStartTime = System.currentTimeMillis()
         layoutMaster?.setMeasureSpecs(mLayoutState, widthMeasureSpec, heightMeasureSpec)
         layoutMaster?.measureChildrens(mLayoutState)
         layoutMaster?.decideMeasuredDimensionFromChildren(mLayoutState, widthMeasureSpec, heightMeasureSpec)
-        logOf("onMeasure: ${System.currentTimeMillis() - measureStartTime}, measureHeight: ${measuredHeight}")
+        logOf("onMeasure: time: ${System.currentTimeMillis() - measureStartTime}, measureHeight: ${measuredHeight}")
     }
 
     private fun getDataSize(): Int = adapter?.totalDataSize() ?: 0
@@ -675,7 +676,14 @@ open class AutoPagerView : ViewGroup {
         }
 
         fun measureChildrens(layoutState: LayoutState) {
-            val isMeasureAll = layoutState.nextTimeMeasureAll
+            if(layoutState.isNormalMeasure()) return
+            layoutState.mStep = LayoutState.Step.Measure
+
+            if (layoutState.needComputeTotalPage) {
+                markPageNotConsistency(layoutState)
+                layoutState.needComputeTotalPage = false
+            }
+            val isMeasureAll = layoutState.nextTimeMeasureAll && layoutState.beenLayoutAtLeastOnce
             if (isMeasureAll) {
                 if (layoutState.isInitMeasureAll()) {
                     // previous measureAll process not yet finish, not interrupt it
@@ -687,6 +695,7 @@ open class AutoPagerView : ViewGroup {
             mTotalPageCount = segments.size
             layoutState.nextTimeMeasureAll = false
 
+            layoutState.mStep = LayoutState.Step.None
         }
 
         abstract fun onMeasureChildrens(layoutState: LayoutState, isInitMeasureAll: Boolean)
@@ -722,8 +731,7 @@ open class AutoPagerView : ViewGroup {
         }
 
         fun markPageNotConsistency(layoutState: LayoutState) {
-            layoutState.nextTimeMeasureAll = true
-            segments.clear()
+            setNextTimeMeasureAll(layoutState)
         }
 
         abstract fun onLayoutWithInBounds(layoutState: LayoutState, changed: Boolean, l: Int, t: Int, r: Int, b: Int)

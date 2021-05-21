@@ -13,9 +13,9 @@ import autoexclue.item.pagerViewHolderCreatorEx
 /**
  * Created by lei.jialin on 2021/4/21
  */
-class GroupTitleCellItem(val index: Int, val str: String?) : AbstractCellItem<GroupTitleCellItem.ViewHolder>() {
+class GroupTitleCellItem(val index: Int, val str: String?, val acc: Int) : AbstractCellItem<GroupTitleCellItem.ViewHolder>() {
     override fun onBindViewHolder(holder: ViewHolder, parent: ViewGroup) {
-        holder.tv.text = str
+        holder.tv.text = "[$acc]" + str
         holder.tvLastExercise.text = "第${index + 1}个"
 
     }

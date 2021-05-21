@@ -51,7 +51,6 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
         super.onCreate(savedInstanceState)
         setSupportActionBar(R.id.wl_toolbar)
         mVContent = findViewById<AutoPagerView>(R.id.wl_wl_content)
-        other = findViewById(R.id.ohter_layout)
         val gravity = findViewById<RadioGroup>(R.id.wl_rg_gravity)
         val horizontal = findViewById<SeekBar>(R.id.wl_sb_horizontal)
         val vertical = findViewById<SeekBar>(R.id.wl_sb_vertical)
@@ -98,17 +97,18 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
     private fun generateData() {
         adapter.clearData()
         val a: MutableList<AbstractCellItem<*>> = ArrayList()
-        val groupSize = RandomUtils.nextInt(1, 10)
+        val groupSize = RandomUtils.nextInt(10, 20)
+        var acc = 0
         for (i in 0 until groupSize) {
             val size = RandomUtils.nextInt(1, 10)
-            a.add(GroupTitleCellItem(i, "Group Title ${i}: " + RandomUtils.nextInt(0, 99999)))
+            a.add(GroupTitleCellItem(i, "Group Title ${i}: " + RandomUtils.nextInt(0, 99999), acc))
             for (j in 0 until size) {
-                a.add(TestCellItem(j, "belong Group${i} : " + RandomUtils.nextDouble()))
+                a.add(TestCellItem(j, "belong Group${i} : " + RandomUtils.nextDouble(), acc))
             }
         }
         adapter.addDataList(a)
         val random = (Math.random() * a.size).toInt()
-        Log.d("AutoPagerView", "[! RANDOM PICK !] $random")
+        Log.d("AutoPagerView", "[! RANDOM PICK !] $random/${a.size}")
         mVContent?.scrollToPosition(random)
     }
 

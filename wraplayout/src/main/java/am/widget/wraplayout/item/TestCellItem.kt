@@ -14,9 +14,9 @@ import java.util.*
 /**
  * Created by lei.jialin on 2021/4/19
  */
-class TestCellItem(private val index: Int, val str: String?) : AbstractCellItem<TestCellItem.ViewHolder>() {
+class TestCellItem(private val index: Int, val str: String?, val acc: Int) : AbstractCellItem<TestCellItem.ViewHolder>() {
     override fun onBindViewHolder(holder: ViewHolder, parent: ViewGroup) {
-        holder.tv.text = str
+        holder.tv.text = "[$acc]" + str
         holder.tvLastExercise.text = "第%d个".format(Locale.CHINA, index)
     }
 

@@ -1,45 +1,39 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context=".business.widgets.wraplayout.WrapLayoutActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginBottom="32dp"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@id/wl_rg_gravity"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/wl_toolbar">
+        android:layout_height="wrap_content">
+        <Button
+            android:id="@+id/choice_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choice" />
 
-        <FrameLayout
-            android:id="@+id/ohter_layout"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:background="@android:color/darker_gray">
-
-            <Button
-                android:id="@+id/choice_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Choice" />
-
-        </FrameLayout>
-
-        <autoexclue.FlingPagerView
-            android:id="@+id/wl_wl_content"
-            android:layout_width="match_parent"
-            android:layout_height="400dp"
-            android:background="@drawable/bg_wraplayout_content"
-            android:horizontalSpacing="0dp"
-            android:verticalSpacing="0dp"
-            app:wlyGravity="top" />
-
+        <am.widget.wraplayout.PageIndicatorView
+            android:id="@+id/pager_index"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
     </LinearLayout>
+
+
+    <autoexclue.FlingPagerView
+        android:id="@+id/wl_wl_content"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:background="@drawable/bg_wraplayout_content"
+        android:horizontalSpacing="0dp"
+        android:verticalSpacing="0dp"
+        app:wlyGravity="top" />
 
     <RadioGroup
         android:id="@+id/wl_rg_gravity"
@@ -48,7 +42,7 @@
         android:orientation="horizontal"
         android:visibility="gone"
         app:layout_constraintBottom_toTopOf="@id/wl_sb_horizontal"
-        tools:visibility="visible">
+        tools:visibility="gone">
 
         <androidx.appcompat.widget.AppCompatRadioButton
             android:id="@+id/wl_rb_top"
@@ -83,42 +77,14 @@
         app:layout_constraintRight_toLeftOf="@id/wl_sb_height"
         app:layout_constraintTop_toTopOf="@id/wl_sb_height" />
 
-    <am.widget.wraplayout.PageIndicatorView
-        android:id="@+id/pager_index"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="50dp"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-
     <androidx.appcompat.widget.AppCompatSeekBar
         android:id="@+id/wl_sb_height"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="10dp"
         android:max="30"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toRightOf="@id/tv_total_height"
-        app:layout_constraintRight_toRightOf="parent" />
-
-    <androidx.appcompat.widget.AppCompatSeekBar
-        android:id="@+id/wl_sb_vertical"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:max="30"
-        app:layout_constraintBottom_toTopOf="@id/wl_sb_height"
-        app:layout_constraintLeft_toRightOf="@id/tv_horizontal"
-        app:layout_constraintRight_toRightOf="parent" />
-
-    <androidx.appcompat.widget.AppCompatSeekBar
-        android:id="@+id/wl_sb_horizontal"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:max="30"
-        app:layout_constraintBottom_toTopOf="@id/wl_sb_vertical"
-        app:layout_constraintLeft_toRightOf="@id/tv_vertical"
         app:layout_constraintRight_toRightOf="parent" />
 
     <androidx.appcompat.widget.AppCompatTextView
@@ -136,6 +102,15 @@
         app:layout_constraintRight_toLeftOf="@id/wl_sb_vertical" />
 
 
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/wl_sb_vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:max="30"
+        app:layout_constraintBottom_toTopOf="@id/wl_sb_height"
+        app:layout_constraintLeft_toRightOf="@id/tv_horizontal"
+        app:layout_constraintRight_toRightOf="parent" />
+
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tv_vertical"
         android:layout_width="wrap_content"
@@ -152,6 +127,17 @@
         app:layout_constraintRight_toLeftOf="@id/wl_sb_horizontal"
         tools:visibility="visible" />
 
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/wl_sb_horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:max="30"
+        app:layout_constraintBottom_toTopOf="@id/wl_sb_vertical"
+        app:layout_constraintLeft_toRightOf="@id/tv_vertical"
+        app:layout_constraintRight_toRightOf="parent" />
+
+
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/wl_toolbar"
         android:layout_width="match_parent"
@@ -164,4 +150,4 @@
         app:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:title="@string/wl_label" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+</LinearLayout>

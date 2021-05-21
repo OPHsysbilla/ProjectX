@@ -93,6 +93,7 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
                 if (columnTop + childHeight > maxParentAvaliableHeight
                         || layoutFinish && childView.visibility == View.VISIBLE) {
                     layoutFinish = true
+                    layoutState.beenLayoutAtLeastOnce = true
                     lp.isInvisibleOutValidLayout = true
                     childView.visibility = ViewGroup.INVISIBLE
                     mChildrenHelper?.removeView(childView)
@@ -119,7 +120,7 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
         }
         val measureHeight = columnTop - getPaddingTop()
         fitSegment(segment, height = measureHeight, start = start, size = visibleCount)
-        logOf("layoutChunk: ${System.currentTimeMillis() - startTime}, measureHeight: ${pagerView.measuredHeight}, layoutHeight: ${columnTop + getPaddingBottom()}")
+        logOf("layoutChunk: time: ${System.currentTimeMillis() - startTime}, measureHeight: ${pagerView.measuredHeight}, layoutHeight: ${columnTop + getPaddingBottom()}")
     }
 
     private fun fitSegment(segment: Segment, height: Int, start: Int, size: Int) {
@@ -137,7 +138,7 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
 
         val index = mPendingPosition
         mPendingPosition = -1
-        val which = if(index >= 0) segments.find { it.start <= index && it.end > index } else null
+        val which = if (index >= 0) segments.find { it.start <= index && it.end > index } else null
         val page = which?.let { segments.indexOf(it) } ?: curSegIndex
         curSegIndex = page
         layoutPageOf(layoutState, page)
@@ -166,22 +167,14 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
     override fun onLayoutWithInBounds(layoutState: AutoPagerView.LayoutState, changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
         val startTime = System.currentTimeMillis()
         layoutChildrens(layoutState)
-        logOf("onLayout: ${System.currentTimeMillis() - startTime}, ${layoutState.needComputeTotalPage}")
-
-        if (layoutState.needComputeTotalPage) {
-            markPageNotConsistency(layoutState)
-            measureChildrens(layoutState)
-            layoutChildrens(layoutState)
-            layoutState.needComputeTotalPage = false
-        }
-
+        logOf("onLayout: time ${System.currentTimeMillis() - startTime}, ${layoutState.needComputeTotalPage}")
     }
 
     private fun onLayoutFinish(layoutState: AutoPagerView.LayoutState, c: Segment) {
         logOf("onLayoutFinish: page: ${curSegIndex + 1}/${getTotalPageCount()}， " +
                 "cur[start-end-layoutRows]:[${c.start} - ${c.end} ~ ${c.layoutRows}]， [segSize-dataSize]: [${c.size}-${getDataSize()}]")
 
-        callbackPageIndex?.invoke("${curSegIndex + 1}/${segments.size}")
+        callbackPageIndex?.invoke("[segSize-dataSize]:[${c.size}-${getDataSize()}], page:${curSegIndex + 1}/${segments.size}, cur: ${c} , segs: ${printSegment()}")
     }
 
     override fun onMeasureChildrens(layoutState: AutoPagerView.LayoutState, isInitMeasureAll: Boolean) {
