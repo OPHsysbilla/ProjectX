@@ -113,7 +113,7 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL, var allowShowHalfVisi
         layoutState.maxLayoutRow = Math.max(segment.layoutRows, layoutState.maxLayoutRow)
         segment.layoutRows = visibleCount
         if (recordSegmentSize != visibleCount) {
-            layoutState.needComputeTotalPage = true
+            pageNotConsistant(layoutState)
         }
         val measureHeight = columnTop - getPaddingTop()
         fitSegment(segment, height = measureHeight, start = start, size = visibleCount)
@@ -157,15 +157,16 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL, var allowShowHalfVisi
         var resetPendingSegmentStart = false
         var resetPendingPosition = false
 
-        val log = "mPendingPosition:${mPendingPosition},pendingSegmentStart: ${layoutState.mPendingChangeSegmentStart}, page index before:${curSegIndex}"
-        val index = if (layoutState.isInitMeasureAll()) {
-            -1
-        } else if (mPendingPosition >= 0) {
-            resetPendingPosition = true
-            mPendingPosition
-        } else if (layoutState.mPendingChangeSegmentStart >= 0) {
+        val log = "mPendingPosition:${layoutState.mPendingScorllPosition},pendingSegmentStart: ${layoutState.mPendingChangeSegmentStart}, page index before:${curSegIndex}"
+        val index = if (layoutState.mPendingChangeSegmentStart >= 0) {
             resetPendingSegmentStart = true
             layoutState.mPendingChangeSegmentStart
+        } else if (layoutState.isNormalMeasure() || layoutState.isInitMeasureAll() ||
+                layoutState.isCorrecting || layoutState.needComputeTotalPage || layoutState.nextTimeMeasureAll) {
+            -1
+        } else if (layoutState.mPendingScorllPosition >= 0) {
+            resetPendingPosition = true
+            layoutState.mPendingScorllPosition
         } else -1
         val page = findWhichPage(index)
         if (segmentAt(page) != null) {
@@ -176,7 +177,7 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL, var allowShowHalfVisi
         logOf(log + ", pick curSegIndex: ${curSegIndex}")
 
         if (resetPendingPosition) {
-            mPendingPosition = -1
+            layoutState.mPendingScorllPosition = -1
         }
         if (resetPendingSegmentStart) {
             layoutState.mPendingChangeSegmentStart = -1
@@ -199,14 +200,15 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL, var allowShowHalfVisi
     override fun layoutChildrens(layoutState: AutoPagerView.LayoutState) {
         layoutState.mStep = AutoPagerView.LayoutState.Step.Layout
         dispatchLayout(layoutState)
-
         if (layoutState.needComputeTotalPage) {
+            layoutState.isCorrecting = true
             layoutState.needComputeTotalPage = false
-            reInitSegmentFromBegin(layoutState)
+            plantMeasureAllBomb(layoutState)
             measureChildrens(layoutState)
             layoutChildrens(layoutState)
+            layoutState.isCorrecting = false
         }
-        layoutState.mStep = AutoPagerView.LayoutState.Step.None
+        layoutState.mStep = AutoPagerView.LayoutState.Step.Done
     }
 
     override fun onLayoutWithInBounds(layoutState: AutoPagerView.LayoutState, changed: Boolean, l: Int, t: Int, r: Int, b: Int) {

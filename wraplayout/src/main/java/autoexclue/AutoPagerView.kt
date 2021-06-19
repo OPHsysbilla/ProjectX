@@ -17,7 +17,6 @@ import autoexclue.layout.LayoutChildrenHelper
 import autoexclue.layout.ViewSpecMethod
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 /**
  * Created by lei.jialin on 2021/4/19
@@ -171,13 +170,21 @@ open class AutoPagerView : ViewGroup {
             MeasureAll,
             Measure,
             Layout,
+            Done,
         }
 
         fun isNormalMeasure(): Boolean = mStep == Step.Measure
-        fun isStepLayout(): Boolean = mStep == Step.Layout
+        fun isStepLayout(): Boolean = isNormalLayout()
+        fun isNormalLayout(): Boolean = mStep == Step.Layout
         fun isInitMeasureAll(): Boolean = mStep == Step.MeasureAll
         fun defaultMeasureSize(): Int =
                 if (maxLayoutRow > 0) maxLayoutRow else AutoPagerView.MAX_PER_MEASURE_CNT
+
+        /*
+        * the index which set by scrollToPosition()
+        * */
+        var mPendingScorllPosition: Int = -1
+        var isCorrecting: Boolean = false
 
         /*
         * when data all been cleared, {@see AutoPagerView} the mPendingChangeSegmentStart should not record the index
@@ -320,9 +327,9 @@ open class AutoPagerView : ViewGroup {
         layoutMaster?.onLayoutWithInBounds(mLayoutState, changed, l, t, r, b)
     }
 
-    fun switchToPage(index: Int) = layoutMaster?.switchToPage(index)
+    fun switchToPage(index: Int) = layoutMaster?.switchToPage(index, mLayoutState)
 
-    fun scrollToPosition(dataIndex: Int) = layoutMaster?.scrollToPosition(dataIndex)
+    fun scrollToPosition(dataIndex: Int) = layoutMaster?.scrollToPosition(dataIndex, mLayoutState)
 
     fun getCurrentIndex() = layoutMaster?.getCurrentIndex() ?: 0
 
@@ -471,6 +478,8 @@ open class AutoPagerView : ViewGroup {
 
         override fun onItemRangeChanged(positionStart: Int, itemCount: Int, payload: Any?) {
             updateCertainPage()
+            // not set mAdapterUpdateDuringMeasure = true for it will jump to first position
+//            triggerUpdateProcessor()
         }
 
         override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
@@ -487,6 +496,9 @@ open class AutoPagerView : ViewGroup {
 
         override fun onClearData() {
             mLayoutState.dataListHashId = System.currentTimeMillis()
+            mLayoutState = LayoutState()
+            layoutMaster?.reset()
+            mLayoutState.nextTimeMeasureAll = true
         }
 
         fun triggerUpdateProcessor() {
@@ -573,8 +585,8 @@ open class AutoPagerView : ViewGroup {
     }
 
     abstract class LayoutMaster {
-        private var lastDataListHashId: Long = 0
-        var mPendingPosition: Int = -1
+        var curSegIndex = 0
+        var mTotalPageCount = 0
         protected var mWidthMode: Int = MeasureSpec.EXACTLY
         protected var mHeightMode: Int = MeasureSpec.EXACTLY
         protected var mWidth: Int = 0
@@ -584,8 +596,6 @@ open class AutoPagerView : ViewGroup {
 
         protected val segments: MutableList<Segment> = ArrayList()
         protected val tempMeasureSegments: SparseArray<Segment> = SparseArray()
-        var curSegIndex = 0
-        var mTotalPageCount = 0
 
         abstract fun dispatchLayout(layoutState: LayoutState)
 
@@ -633,7 +643,7 @@ open class AutoPagerView : ViewGroup {
             val widthSize = MeasureSpec.getSize(wSpec)
             val heightSize = MeasureSpec.getSize(hSpec)
             if (widthSize != mWidth || heightSize != mHeight) {
-                reInitSegmentFromBegin(layoutState)
+                plantMeasureAllBomb(layoutState)
             }
             mWidth = widthSize
             mHeight = heightSize
@@ -708,11 +718,12 @@ open class AutoPagerView : ViewGroup {
 
         fun getCurrentIndex() = curSegIndex
 
-        fun switchToPage(index: Int) {
+        fun switchToPage(index: Int, layoutState: LayoutState) {
             val oldIndex = curSegIndex
             val newIndex = validDataSizeInSegment(index)
             if (oldIndex != newIndex) {
-                mPendingPosition = segmentAt(newIndex)?.start ?: segmentAt(newIndex - 1)?.end ?: -1
+                layoutState.mPendingScorllPosition = segmentAt(newIndex)?.start
+                        ?: segmentAt(newIndex - 1)?.end ?: -1
                 mAutoPagerView?.post { mAutoPagerView?.requestLayout() }
             }
         }
@@ -761,17 +772,21 @@ open class AutoPagerView : ViewGroup {
             val pagerView = mAutoPagerView
                     ?: throw IllegalArgumentException("layoutMaster.mAutoPagerView must not be null")
 
-            if (layoutState.needComputeTotalPage || pagerView.mAdapterUpdateDuringMeasure) {
+            if (layoutState.needComputeTotalPage) {
                 layoutState.needComputeTotalPage = false
+                plantMeasureAllBomb(layoutState)
+            } else if (pagerView.mAdapterUpdateDuringMeasure) {
                 pagerView.mAdapterUpdateDuringMeasure = false
-                reInitSegmentFromBegin(layoutState)
+                plantMeasureAllBomb(layoutState)
             }
             val isMeasureAll = layoutState.nextTimeMeasureAll && layoutState.beenLayoutAtLeastOnce
+            layoutState.isCorrecting = isMeasureAll
             if (isMeasureAll) {
                 if (layoutState.isInitMeasureAll()) {
                     // previous measureAll process not yet finish, not interrupt it
                     return
                 }
+                recordFirstIndexOfSegment(layoutState)
                 layoutState.mStep = AutoPagerView.LayoutState.Step.MeasureAll
             }
             onMeasureChildrens(layoutState, isMeasureAll)
@@ -783,23 +798,34 @@ open class AutoPagerView : ViewGroup {
 
         abstract fun onMeasureChildrens(layoutState: LayoutState, isInitMeasureAll: Boolean)
 
-        fun toPrevPage() {
-            switchToPage(curSegIndex - 1)
+        fun toPrevPage(layoutStatue: LayoutState) {
+            switchToPage(curSegIndex - 1, layoutStatue)
         }
 
-        fun toNextPage() {
-            switchToPage(curSegIndex + 1)
+        fun toNextPage(layoutStatue: LayoutState) {
+            switchToPage(curSegIndex + 1, layoutStatue)
         }
 
-        fun reInitSegmentFromBegin(layoutState: LayoutState) {
-            nextTimeMeasureAll(layoutState)
+        fun plantMeasureAllBomb(layoutState: LayoutState) {
             recordFirstIndexOfSegment(layoutState)
-        }
-
-        fun nextTimeMeasureAll(layoutState: LayoutState) {
-            layoutState.nextTimeMeasureAll = true
             curSegIndex = 0
             segments.clear()
+            layoutState.nextTimeMeasureAll = true
+        }
+
+        fun reset() {
+            segments.clear()
+            curSegIndex = 0
+            mTotalPageCount = 0
+            mWidthMode = MeasureSpec.EXACTLY
+            mHeightMode = MeasureSpec.EXACTLY
+            mWidth = 0
+            mHeight = 0
+        }
+
+        protected fun pageNotConsistant(layoutState: LayoutState) {
+            recordFirstIndexOfSegment(layoutState)
+            layoutState.needComputeTotalPage = true
         }
 
         abstract fun onLayoutWithInBounds(
@@ -812,20 +838,13 @@ open class AutoPagerView : ViewGroup {
         )
 
         abstract fun layoutChildrens(layoutState: LayoutState)
-        fun scrollToPosition(dataIndex: Int) {
-            mPendingPosition = dataIndex
+        fun scrollToPosition(dataIndex: Int, layoutState: LayoutState) {
+            layoutState.mPendingScorllPosition = dataIndex
             mAutoPagerView?.post { mAutoPagerView?.requestLayout() }
         }
 
         fun recordFirstIndexOfSegment(mLayoutState: LayoutState) {
-//            if (mLayoutState.dataListHashId != lastDataListHashId) {
-//                lastDataListHashId = mLayoutState.dataListHashId
-//                return
-//            }
-            val nextSegmentStart = getCurSegment()?.start ?: -1
-            if (nextSegmentStart != -1) {
-                mLayoutState.mPendingChangeSegmentStart = nextSegmentStart
-            }
+            mLayoutState.mPendingChangeSegmentStart = getCurSegment()?.start ?: -1
         }
     }
 

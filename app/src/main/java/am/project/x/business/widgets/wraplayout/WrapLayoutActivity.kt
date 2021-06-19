@@ -36,6 +36,7 @@ import autoexclue.layout.LinearLayoutMaster
 import com.fenbi.megrez.app.exercisescope.flowlayout.ChoiceDialog
 import kotlinx.android.synthetic.main.activity_wraplayout.*
 import java.util.*
+import kotlin.random.Random
 
 /**
  * 自动换行布局
@@ -101,17 +102,18 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
         var acc = 0
         for (i in 0 until groupSize) {
             val size = RandomUtils.nextInt(1, 10)
-            a.add(GroupTitleCellItem(i, "Group Title ${i}: " + RandomUtils.nextInt(0, 99999), acc))
+            a.add(GroupTitleCellItem(i, " Group Title ${i}: " + Random.nextInt(99999), acc))
             acc++
 
             for (j in 0 until size) {
-                a.add(TestCellItem(j, "belong Group${i} : " + RandomUtils.nextDouble(), acc))
+                a.add(TestCellItem(j, " belong2 Group${i} : " + Random.nextInt(99999), acc))
                 acc++
             }
         }
         adapter.addDataList(a)
         val random = (Math.random() * a.size).toInt()
         Log.d("AutoPagerView", "[! RANDOM PICK !] $random/${a.size}")
+        adapter.notifyDataSetChanged()
         mVContent?.scrollToPosition(random)
         tv_total_height.text = "random: " + random
     }
