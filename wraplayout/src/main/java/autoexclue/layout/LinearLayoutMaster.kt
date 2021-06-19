@@ -158,14 +158,13 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL, var allowShowHalfVisi
         var resetPendingPosition = false
 
         val log = "mPendingPosition:${layoutState.mPendingScorllPosition},pendingSegmentStart: ${layoutState.mPendingChangeSegmentStart}, page index before:${curSegIndex}"
+        val isDirtyLayout = layoutState.isNormalMeasure() || layoutState.isInitMeasureAll() ||
+                layoutState.isCorrecting || layoutState.needComputeTotalPage || layoutState.nextTimeMeasureAll
         val index = if (layoutState.mPendingChangeSegmentStart >= 0) {
             resetPendingSegmentStart = true
             layoutState.mPendingChangeSegmentStart
-        } else if (layoutState.isNormalMeasure() || layoutState.isInitMeasureAll() ||
-                layoutState.isCorrecting || layoutState.needComputeTotalPage || layoutState.nextTimeMeasureAll) {
-            -1
         } else if (layoutState.mPendingScorllPosition >= 0) {
-            resetPendingPosition = true
+            if(!isDirtyLayout) resetPendingPosition = true
             layoutState.mPendingScorllPosition
         } else -1
         val page = findWhichPage(index)
