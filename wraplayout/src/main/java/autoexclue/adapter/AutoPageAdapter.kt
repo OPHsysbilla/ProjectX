@@ -1,6 +1,5 @@
 package autoexclue.adapter
 
-import am.widget.wraplayout.item.GroupTitleCellItem
 import android.content.Context
 import android.util.Pair
 import android.util.SparseArray
@@ -31,7 +30,6 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
         eventHookHelper.bind(viewHolder, this)
         return viewHolder
     }
-
     fun clearData() {
         displyItems.clear()
     }
@@ -41,7 +39,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
         displyItems.addAll(cements)
     }
 
-    override fun totalDataSize(): Int = displyItems.size
+    override fun totalDataSize(): Int =  displyItems.size
 
     class CellList : ArrayList<AbstractCellItem<*>>() {
         val viewHolderFactory = ViewHolderFactory()
@@ -100,16 +98,14 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
             }
         }
     }
+    var callbackHeight: ((dataIndex:Int) -> Int)? = null
+    override fun measureHeightAt(index: Int, context: Context): Int
+            =  displyItems.getOrNull(index)?.firstAssumeMeasureHeight(context) ?: 0
 
-    var callbackHeight: ((dataIndex: Int) -> Int)? = null
-    override fun measureHeightAt(context: Context, index: Int): Int = displyItems.getOrNull(index)?.firstPresetHeight(context)
-            ?: 0
     //</editor-fold>
 
     override fun bindData2ViewHolder(index: Int, vh: AutoPagerView.ViewHolder, parent: ViewGroup) {
-        val item = displyItems.getOrNull(index) as? AbstractCellItem<AutoPagerView.ViewHolder>
-                ?: return
-        val group = (item as? GroupTitleCellItem)?.index
+        val item = displyItems.getOrNull(index) as? AbstractCellItem<AutoPagerView.ViewHolder> ?: return
         item.onBindViewHolder(vh, parent)
     }
 
@@ -119,12 +115,22 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
 
     fun dataAt(index: Int) = displyItems.getOrNull(index)
 
+    override fun onAttachedToRecyclerView(autoPagerView: AutoPagerView) {
+        super.onAttachedToRecyclerView(autoPagerView)
+        isAttached = true
+    }
+
+    override fun onDetachedFromRecyclerView(autoPagerView: AutoPagerView) {
+        super.onDetachedFromRecyclerView(autoPagerView)
+        isAttached = false
+    }
 
     //</editor-fold>
 
     //<editor-fold desc="Event Hook">
     fun addEventAnchor(
-            eventHook: EventAnchor<in AutoPagerView.ViewHolder>) {
+            eventHook: EventAnchor<AutoPagerView.ViewHolder>
+    ) {
         if (isAttached) {
             throw IllegalAccessException("addEventAnchor should be called before view is attached, normally before setAdapter")
         }
@@ -132,7 +138,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
     }
 
     fun removeEventAnchor(
-            eventHook: EventAnchor<in AutoPagerView.ViewHolder>) {
+            eventHook: EventAnchor<AutoPagerView.ViewHolder>) {
         eventHookHelper.remove(eventHook)
     }
     //</editor-fold desc="Event Hook">
@@ -212,7 +218,7 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
      * @throws IllegalStateException
      * this method must be called before setAdapter
      */
-    fun addOnItemLongClickListener(onItemLongClickListener: OnItemLongClickListener?) {
+    fun setOnItemLongClickListener(onItemLongClickListener: OnItemLongClickListener?) {
         check(!(isAttached && this.onItemLongClickListener == null && onItemLongClickListener != null)) {
             "setOnItemLongClickListener() must be called before setAdapter()"
         }
@@ -234,6 +240,6 @@ class AutoPageAdapter : AutoPagerView.Adapter<AutoPagerView.ViewHolder>() {
                     model: AbstractCellItem<*>?)
     }
 
-    override fun itemViewType(index: Int): Int =  displyItems.getOrNull(index)?.viewType ?: -1
+    override fun itemViewType(index: Int): Int = displyItems.getOrNull(index)?.viewType ?: -1
     //</editor-fold>
 }

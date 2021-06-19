@@ -3,7 +3,6 @@ package autoexclue.layout
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
-import androidx.annotation.IntDef
 import autoexclue.AutoPagerView
 import autoexclue.AutoPagerView.Companion.logOf
 import autoexclue.Segment
@@ -12,22 +11,15 @@ import java.lang.StringBuilder
 /**
  * Created by lei.jialin on 2021/5/19
  */
-class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.LayoutMaster() {
+class LinearLayoutMaster(var mOrientation: Int = VERTICAL, var allowShowHalfVisibleCell: Boolean = false) : AutoPagerView.LayoutMaster() {
 
     companion object {
         const val HORIZONTAL = LinearLayout.HORIZONTAL
         const val VERTICAL = LinearLayout.VERTICAL
-
-        /** @hide
-         */
-        @IntDef(HORIZONTAL, VERTICAL)
-        @kotlin.annotation.Retention
-        annotation class Orientation
     }
 
-    var callbackPageIndex: ((String) -> Unit)? = null
-
-
+    var callbackPageIndex: ((curPage: Int, totalPage: Int) -> Unit)? = null
+    var debug: ((log: String) -> Unit)? = null
     override fun canScrollHorizontally(): Boolean = mOrientation == HORIZONTAL
     override fun canScrollVertically(): Boolean = mOrientation == VERTICAL
 
@@ -51,13 +43,13 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
         var rows = 0
         var layoutFinish = false
         var logger = ""
+        var firstExceedIndex = -1
         while (dataIndex < end) {
             val numColumn = 1
             var childMaxHeight = 0
             var columnleft = getPaddingLeft()
             var column = 0
             while (column < numColumn) {
-
                 if (rows > 0 && !layoutFinish) columnTop += getVerticalSpacing()
                 if (column > 0 && !layoutFinish) columnleft += getHorizontalSpacing()
                 var childHeight = 0
@@ -91,16 +83,26 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
                 childHeight = childView.measuredHeight
                 mChildrenHelper?.onChildAdded(dataIndex, childWidth, childHeight)
                 logger += "h[$dataIndex]=$childHeight, "
-                if (columnTop + childHeight > maxParentAvaliableHeight
-                        || layoutFinish && childView.visibility == View.VISIBLE) {
+                val left = columnleft
+                val top = columnTop
+                val right = columnleft + childWidth
+                val bottom = columnTop + childHeight
+                val isExceed = bottom > maxParentAvaliableHeight
+                        || layoutFinish && childView.visibility == View.VISIBLE
+                if (isExceed) {
+                    if (!layoutFinish) {
+                        firstExceedIndex = dataIndex
+                    }
                     layoutFinish = true
                     layoutState.beenLayoutAtLeastOnce = true
-                    removeChild(dataIndex, childView)
+                    if (allowShowHalfVisibleCell && firstExceedIndex == dataIndex) {
+                        // could show this half visible item
+                        displayChildWithLayout(dataIndex, childView, left, top, right, bottom)
+                    } else removeChild(dataIndex, childView)
                 } else if (!layoutFinish) {
                     visibleCount++
-                    childView.layout(columnleft, columnTop, columnleft + childWidth, columnTop + childHeight)
                     childMaxHeight = childHeight
-                    markChildVisible(dataIndex, childView)
+                    displayChildWithLayout(dataIndex, childView, left, top, right, bottom)
                 }
                 column++
                 dataIndex++
@@ -116,6 +118,12 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
         val measureHeight = columnTop - getPaddingTop()
         fitSegment(segment, height = measureHeight, start = start, size = visibleCount)
         logOf("layoutChunk: time: ${System.currentTimeMillis() - startTime}, $logger, step: ${layoutState.mStep}, layoutFinish: $layoutFinish, columnTop:$columnTop}, measureHeight: ${pagerView.measuredHeight}, layoutHeight: ${columnTop + getPaddingBottom()}")
+    }
+
+    private fun displayChildWithLayout(dataIndex: Int, childView: View,
+                                       left: Int, top: Int, right: Int, bottom: Int) {
+        childView.layout(left, top, right, bottom)
+        markChildVisible(dataIndex, childView)
     }
 
     private fun markChildVisible(dataIndex: Int, childView: View) {
@@ -150,12 +158,14 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
         var resetPendingPosition = false
 
         val log = "mPendingPosition:${mPendingPosition},pendingSegmentStart: ${layoutState.mPendingChangeSegmentStart}, page index before:${curSegIndex}"
-        val index = if (layoutState.mPendingChangeSegmentStart >= 0) {
-            resetPendingSegmentStart = true
-            layoutState.mPendingChangeSegmentStart
+        val index = if (layoutState.isInitMeasureAll()) {
+            -1
         } else if (mPendingPosition >= 0) {
             resetPendingPosition = true
             mPendingPosition
+        } else if (layoutState.mPendingChangeSegmentStart >= 0) {
+            resetPendingSegmentStart = true
+            layoutState.mPendingChangeSegmentStart
         } else -1
         val page = findWhichPage(index)
         if (segmentAt(page) != null) {
@@ -187,13 +197,12 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
     }
 
     override fun layoutChildrens(layoutState: AutoPagerView.LayoutState) {
-//        if (layoutState.isStepLayout()) return
         layoutState.mStep = AutoPagerView.LayoutState.Step.Layout
         dispatchLayout(layoutState)
 
         if (layoutState.needComputeTotalPage) {
             layoutState.needComputeTotalPage = false
-            markPageNotConsistency(layoutState)
+            reInitSegmentFromBegin(layoutState)
             measureChildrens(layoutState)
             layoutChildrens(layoutState)
         }
@@ -210,8 +219,8 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL) : AutoPagerView.Layou
     private fun onLayoutFinish(layoutState: AutoPagerView.LayoutState, c: Segment) {
         logOf("onLayoutFinish: page: ${curSegIndex + 1}/${getTotalPageCount()}， " +
                 "cur[start-end-layoutRows]:[${c.start} - ${c.end} ~ ${c.layoutRows}]， [segSize-dataSize]: [${c.size}-${getDataSize()}]")
-
-        callbackPageIndex?.invoke("[segSize-dataSize]:[${c.size}-${getDataSize()}], page:${curSegIndex + 1}/${segments.size}, cur: ${c} , segs: ${printSegment()}")
+        debug?.invoke("[segSize-dataSize]:[${c.size}-${getDataSize()}], page:${curSegIndex + 1}/${segments.size}, cur: ${c} , segs: ${printSegment()}")
+        callbackPageIndex?.invoke(curSegIndex + 1, segments.size)
     }
 
     override fun onMeasureChildrens(layoutState: AutoPagerView.LayoutState, isInitMeasureAll: Boolean) {

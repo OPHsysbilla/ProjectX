@@ -42,11 +42,11 @@ import java.util.*
  */
 class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGroup.OnCheckedChangeListener, OnSeekBarChangeListener {
     private var mVContent: AutoPagerView? = null
-    private var other: View? = null
     private lateinit var choiceBtn: Button
     private val dialog by lazy {
         ChoiceDialog(this)
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setSupportActionBar(R.id.wl_toolbar)
@@ -57,7 +57,7 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
         val height = findViewById<SeekBar>(R.id.wl_sb_height)
         choiceBtn = findViewById<Button>(R.id.choice_button)
         choiceBtn.setOnClickListener {
-            dialog.show()
+            generateData()
         }
         gravity.setOnCheckedChangeListener(this)
         gravity.check(R.id.wl_rb_top)
@@ -79,14 +79,14 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
                 mVContent?.switchToPage(a - 1)
             }
         }
-        val layoutMaster =  LinearLayoutMaster()
-        layoutMaster.callbackPageIndex = {
+        val layoutMaster = LinearLayoutMaster(allowShowHalfVisibleCell = true)
+        layoutMaster.debug = { it ->
             pager_index.setPageDecorateText(it)
         }
         mVContent?.layoutMaster = layoutMaster
         adapter.setOnItemClickListener(object : AutoPageAdapter.OnItemClickListener {
             override fun onClick(position: Int, itemView: View, viewHolder: AutoPagerView.ViewHolder, model: AbstractCellItem<*>?) {
-                val title = (model as? TestCellItem)?.str ?:""
+                val title = (model as? TestCellItem)?.str ?: ""
                 Log.d("autopagers", " onClick post: $position, $title")
             }
         })

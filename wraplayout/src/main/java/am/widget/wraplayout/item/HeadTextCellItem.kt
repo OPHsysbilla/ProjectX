@@ -28,7 +28,7 @@ class HeadTextCellItem(val str: String?) : AbstractCellItem<HeadTextCellItem.Vie
         val tv: TextView = itemView.findViewById(R.id.head_text)
     }
 
-    override fun firstPresetHeight(context: Context): Int =
+    override fun firstAssumeMeasureHeight(context: Context): Int =
             TypedValue.applyDimension(
                     TypedValue.COMPLEX_UNIT_DIP, 162f,
                     context.resources.displayMetrics).toInt()

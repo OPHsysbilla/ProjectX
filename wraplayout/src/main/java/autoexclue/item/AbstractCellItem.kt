@@ -26,5 +26,5 @@ abstract class AbstractCellItem<T: AutoPagerView.ViewHolder> {
     }
     abstract fun onBindViewHolder(holder: T, parent: ViewGroup)
 
-    abstract fun firstPresetHeight(context: Context): Int
+    abstract fun firstAssumeMeasureHeight(context: Context): Int
 }

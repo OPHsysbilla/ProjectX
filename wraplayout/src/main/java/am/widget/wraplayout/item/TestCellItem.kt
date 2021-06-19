@@ -20,7 +20,7 @@ class TestCellItem(private val index: Int, val str: String?, val acc: Int) : Abs
         holder.tvLastExercise.text = "第%d个".format(Locale.CHINA, index)
     }
 
-    override fun firstPresetHeight(context: Context): Int = 174
+    override fun firstAssumeMeasureHeight(context: Context): Int = 174
 
 
     override val pagerViewHolderCreator: IPagerViewHolderCreator<ViewHolder> = pagerViewHolderCreatorEx { view: View -> ViewHolder(view) }

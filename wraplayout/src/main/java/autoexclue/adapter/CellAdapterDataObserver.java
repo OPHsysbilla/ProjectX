@@ -28,4 +28,8 @@ public abstract class CellAdapterDataObserver {
     public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
         // do nothing
     }
+
+    public void onClearData() {
+
+    }
 }

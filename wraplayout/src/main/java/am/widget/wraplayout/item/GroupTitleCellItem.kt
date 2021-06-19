@@ -29,5 +29,5 @@ class GroupTitleCellItem(val index: Int, val str: String?, val acc: Int) : Abstr
         val tvLastExercise: TextView = itemView.findViewById(R.id.tv_last_exercise)
     }
 
-    override fun firstPresetHeight(context: Context): Int  = 87
+    override fun firstAssumeMeasureHeight(context: Context): Int  = 87
 }

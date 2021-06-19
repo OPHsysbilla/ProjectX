@@ -59,4 +59,10 @@ public class CellAdapterDataObservable extends Observable<CellAdapterDataObserve
             mObservers.get(i).onItemRangeMoved(fromPosition, toPosition, 1);
         }
     }
+
+    public void notifyClearData() {
+        for (int i = mObservers.size() - 1; i >= 0; i--) {
+            mObservers.get(i).onClearData();
+        }
+    }
 }
