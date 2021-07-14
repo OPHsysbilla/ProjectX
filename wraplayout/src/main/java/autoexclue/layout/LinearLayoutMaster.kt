@@ -204,7 +204,7 @@ class LinearLayoutMaster(var mOrientation: Int = VERTICAL, var allowShowHalfVisi
             layoutState.needComputeTotalPage = false
             plantMeasureAllBomb(layoutState)
             measureChildrens(layoutState)
-            layoutChildrens(layoutState)
+            dispatchLayout(layoutState)
             layoutState.isCorrecting = false
         }
         layoutState.mStep = AutoPagerView.LayoutState.Step.Done
