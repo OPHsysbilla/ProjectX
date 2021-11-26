@@ -45,7 +45,7 @@ class GridActivity : AppCompatActivity() {
             override fun generateLayoutParam(context: Context): ViewGroup.MarginLayoutParams {
                 return FrameLayout.LayoutParams(293,473)
                         .apply {
-                            setMargins(52,0,0,0)
+                            setMargins(52,0,52,0)
                         }
             }
 
