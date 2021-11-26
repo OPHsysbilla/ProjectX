@@ -153,6 +153,7 @@
         <activity
             android:name=".business.others.retrofithelper.RetrofitActivity"
             android:label="@string/retrofit_label" />
+        <activity android:name=".business.widgets.wraplayout.GridActivity" />
 
         <service
             android:name=".business.others.ftp.legacy.LegacyFtpService"
