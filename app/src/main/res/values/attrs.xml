@@ -26,4 +26,12 @@
         <attr name="TFL_max_select" format="integer" />
         <attr name="TFL_tag_gravity" format="integer" />
     </declare-styleable>
+    <declare-styleable name="SwitchChoiceView">
+        <attr name="SCV_highlightColor" format="color" />
+        <attr name="SCV_normalColor" format="color" />
+        <attr name="SCV_firstChoiceTitle" format="string" />
+        <attr name="SCV_secondChoiceTitle" format="string" />
+        <attr name="SCV_roundRadius" format="dimension" />
+        <attr name="SCV_titleSize" format="dimension" />
+    </declare-styleable>
 </resources>

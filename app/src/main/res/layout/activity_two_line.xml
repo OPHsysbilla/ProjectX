@@ -10,10 +10,11 @@
     tools:context=".business.widgets.wraplayout.TwoLineActivity">
 
 
-    <FrameLayout
+    <ImageView
         android:id="@+id/layout_examine_answer_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
+        android:scaleType="fitStart"
         android:background="@drawable/rectangle_ly"
         app:layout_constraintBottom_toTopOf="@id/btn_finish"
         app:layout_constraintTop_toBottomOf="@id/range_select"
@@ -91,4 +92,20 @@
         app:layout_constraintRight_toLeftOf="@id/btn_next_page"
         app:layout_constraintTop_toBottomOf="@id/parse_start" />
 
+
+    <am.project.x.business.widgets.wraplayout.SwitchChoiceView
+        android:id="@+id/btn_switch_copying_mode"
+        android:layout_width="186dp"
+        android:layout_height="48dp"
+        app:SCV_firstChoiceTitle="呵呵2"
+        app:SCV_secondChoiceTitle="呵呵1"
+        app:SCV_roundRadius="30dp"
+        app:SCV_titleSize="20sp"
+        app:SCV_highlightColor="@android:color/black"
+        app:SCV_normalColor="@android:color/white"
+        app:layout_constraintBottom_toTopOf="@+id/layout_examine_answer_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/range_select" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,12 +3,13 @@ package am.project.x.business.widgets.wraplayout
 import am.project.x.R
 import am.widget.wraplayout.MegezScrollView
 import am.widget.wraplayout.item.HeadTextCellItem
-import androidx.appcompat.app.AppCompatActivity
+import android.graphics.*
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.widget.TextView
-import autoexclue.item.AbstractCellItem
+import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.activity_two_line.*
 
 class TwoLineActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,7 +35,8 @@ class TwoLineActivity : AppCompatActivity() {
     }
 
     private fun initView() {
-
+        btnNextPage.setOnClickListener {
+        }
     }
 
     private fun initData() {
@@ -43,10 +45,10 @@ class TwoLineActivity : AppCompatActivity() {
             list.add(HeadTextCellItem("$i-$i"))
         }
         val viewHoldList =
-                list.map { it.pagerViewHolderCreator.create(LayoutInflater.from(this).inflate(it.layoutRes, rangeSelect, false)) }
-        viewHoldList.forEachIndexed { index, item ->
+                list.map { it.pagerViewHolderCreator.create(LayoutInflater.from(this).inflate(it.layoutRes,rangeSelect,false)) }
+        viewHoldList.forEachIndexed { index,item ->
             rangeSelect.addView(item.itemView)
-            list[index].onBindViewHolder(item, rangeSelect)
+            list[index].onBindViewHolder(item,rangeSelect)
         }
     }
 
