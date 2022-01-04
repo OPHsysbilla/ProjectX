@@ -14,8 +14,8 @@
         android:id="@+id/layout_examine_answer_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:scaleType="fitStart"
         android:background="@drawable/rectangle_ly"
+        android:scaleType="fitStart"
         app:layout_constraintBottom_toTopOf="@id/btn_finish"
         app:layout_constraintTop_toBottomOf="@id/range_select"
         tools:layout_editor_absoluteX="167dp" />
@@ -25,8 +25,8 @@
         android:layout_width="66dp"
         android:layout_height="72dp"
         android:layout_marginLeft="32dp"
-        android:padding="17dp"
         android:background="#E8E8E8"
+        android:padding="17dp"
         android:src="@drawable/ic_borderless_next_page"
         app:layout_constraintBottom_toBottomOf="@id/range_select"
         app:layout_constraintLeft_toRightOf="@id/range_select"
@@ -37,9 +37,9 @@
         android:id="@+id/btn_prev_page"
         android:layout_width="66dp"
         android:layout_height="72dp"
-        android:padding="17dp"
-        android:background="#E8E8E8"
         android:layout_marginRight="32dp"
+        android:background="#E8E8E8"
+        android:padding="17dp"
         android:src="@drawable/ic_borderless_prev_page"
         app:layout_constraintBottom_toBottomOf="@id/range_select"
         app:layout_constraintLeft_toLeftOf="parent"
@@ -83,6 +83,35 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/layout_examine_answer_content" />
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="80px"
+        android:text="我的模块"
+        android:textSize="36px"
+        android:gravity="center"
+        android:background="@drawable/layer_list_bottom_line"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+
+    <am.project.x.business.widgets.wraplayout.SwitchChoiceView
+        android:id="@+id/btn_switch_copying_mode"
+        android:layout_width="186dp"
+        android:layout_height="48dp"
+        app:SCV_firstChoiceTitle="呵呵2"
+        app:SCV_highlightColor="@android:color/black"
+        app:SCV_normalColor="@android:color/white"
+        app:SCV_roundRadius="30dp"
+        app:SCV_secondChoiceTitle="呵呵1"
+        app:SCV_titleSize="20sp"
+        app:layout_constraintBottom_toTopOf="@+id/layout_examine_answer_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/range_select" />
+
     <am.widget.wraplayout.MegezScrollView
         android:id="@+id/range_select"
         android:layout_width="0dp"
@@ -91,21 +120,4 @@
         app:layout_constraintLeft_toRightOf="@id/btn_prev_page"
         app:layout_constraintRight_toLeftOf="@id/btn_next_page"
         app:layout_constraintTop_toBottomOf="@id/parse_start" />
-
-
-    <am.project.x.business.widgets.wraplayout.SwitchChoiceView
-        android:id="@+id/btn_switch_copying_mode"
-        android:layout_width="186dp"
-        android:layout_height="48dp"
-        app:SCV_firstChoiceTitle="呵呵2"
-        app:SCV_secondChoiceTitle="呵呵1"
-        app:SCV_roundRadius="30dp"
-        app:SCV_titleSize="20sp"
-        app:SCV_highlightColor="@android:color/black"
-        app:SCV_normalColor="@android:color/white"
-        app:layout_constraintBottom_toTopOf="@+id/layout_examine_answer_content"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/range_select" />
 </androidx.constraintlayout.widget.ConstraintLayout>

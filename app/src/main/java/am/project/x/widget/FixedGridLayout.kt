@@ -4,11 +4,10 @@ import am.project.x.R
 import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
-import android.view.LayoutInflater
+import android.util.Log
 import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
-import androidx.annotation.LayoutRes
 import androidx.core.view.isVisible
 import java.util.*
 
@@ -20,9 +19,11 @@ class FixedGridLayout @JvmOverloads constructor(
         attributeSet: AttributeSet? = null,
         typeStyle: Int = 0
 ) : FrameLayout(context,attributeSet,typeStyle) {
-    private var mLayoutConfig: IFixLayoutConfig = DefaultLayoutConfig(3,6)
+    private var mColumn: Int = 3
+    private var mRow: Int = 3
+    private var maxCountOnePage: Int = 9
     private val viewList = mutableListOf<View>()
-    private val pageList = mutableListOf<List<ViewHolder>>()
+    private val pageList = mutableListOf<List<GridViewHolder>>()
 
     // TODO： @leijialin 改成数据驱动的形式
     var disableSelect = false
@@ -55,17 +56,16 @@ class FixedGridLayout @JvmOverloads constructor(
         render(currentPage)
     }
 
-    fun initLayoutConfig(layoutConfig: IFixLayoutConfig) {
-        mLayoutConfig = layoutConfig
-    }
-
     fun setData(
-            viewHolders: List<ViewHolder>,
+            column: Int = mColumn,
+            row: Int = mRow,
+            viewHolders: List<GridViewHolder>,
             defaultPage: Int,
     ) {
         pageList.clear()
-        if (mLayoutConfig.column == 0 || mLayoutConfig.row == 0) return
-        val maxCountOnePage = Math.max(1,mLayoutConfig.column * mLayoutConfig.row)
+        mColumn = column
+        mColumn = row
+        maxCountOnePage = Math.max(1,column * row)
         pageList.addAll(viewHolders.chunked(maxCountOnePage))
         currentPage = (defaultPage.coerceAtLeast(0)) / maxCountOnePage
     }
@@ -104,7 +104,7 @@ class FixedGridLayout @JvmOverloads constructor(
         }
     }
 
-    private fun renderSelectView(selectView: ImageView,holder: ViewHolder) {
+    private fun renderSelectView(selectView: ImageView,holder: GridViewHolder) {
         if (isSelectMode) {
             selectView.visibility = VISIBLE
             val selectIcon = if (holder.isSelected) {
@@ -118,18 +118,16 @@ class FixedGridLayout @JvmOverloads constructor(
         }
     }
 
-    private fun prepareView(count: Int,page: List<ViewHolder>) {
+    private fun prepareView(count: Int,page: List<GridViewHolder>) {
         val oldSize = viewList.size
         val newViews = mutableListOf<View>()
-        val regulation = mLayoutConfig
         when {
             count > 0 -> {
-                val inflater = LayoutInflater.from(context)
-                val layout = regulation.getLayoutId()
                 repeat(count) {
-                    newViews.add(
-                            inflater.inflate(layout,null,false)
-                    )
+                    page.getOrNull(it)?.inflateRootView(context)?.let { root ->
+                        newViews.add(root)
+                        Log.d("whuys","root: $root, parent: ${root.parent}, ")
+                    }
                 }
                 viewList.addAll(newViews)
             }
@@ -142,9 +140,9 @@ class FixedGridLayout @JvmOverloads constructor(
             }
         }
         newViews.forEachIndexed { index,view ->
-            val col = (oldSize + index).rem(mLayoutConfig.column)
-            val row = (oldSize + index).div(mLayoutConfig.column)
-            val lp = regulation.generateLayoutParam(context).apply {
+            val col = (oldSize + index).rem(mColumn)
+            val row = (oldSize + index).div(mColumn)
+            page.getOrNull(index)?.generateLayoutParam(context)?.apply {
                 if (this.width > 0 || this.height > 0) {
                     this.setMargins(
                             this.leftMargin + col * (this.leftMargin + this.width + this.rightMargin),
@@ -153,45 +151,22 @@ class FixedGridLayout @JvmOverloads constructor(
                             0,
                     )
                 }
+                addView(view,this)
             }
-            addView(view,lp)
         }
     }
 
-    fun getPageList(): List<List<ViewHolder>> = pageList
+    fun getPageList(): List<List<GridViewHolder>> = pageList
 
     fun getSelectedFile() = pageList.flatten().filter { it.isSelected }
 
-    abstract class ViewHolder constructor(
+    abstract class GridViewHolder constructor(
             val onClick: (Boolean) -> Unit,
             val onLongClick: (Boolean) -> Unit = {}
     ) {
         abstract fun onBindingData(view: View,selectMode: Boolean)
-        var isSelected = false
-    }
-
-    abstract class IFixLayoutConfig(val column: Int,val row: Int) {
-        @LayoutRes
-        abstract fun getLayoutId(): Int
+        abstract fun inflateRootView(context: Context): View
         abstract fun generateLayoutParam(context: Context): MarginLayoutParams
-    }
-
-    private class DefaultLayoutConfig(column: Int,row: Int) : IFixLayoutConfig(column,row) {
-        override fun getLayoutId(): Int = R.layout.layout_cement_head_text
-
-        override fun generateLayoutParam(context: Context): MarginLayoutParams {
-            return LayoutParams(
-                    400,
-                    184
-            ).apply {
-                setMargins(
-                        30,
-                        30,
-                        0,
-                        0,
-                )
-            }
-        }
-
+        var isSelected = false
     }
 }

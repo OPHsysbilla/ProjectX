@@ -6,8 +6,6 @@ import android.content.Context
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.Gravity
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
@@ -28,10 +26,12 @@ class GridActivity : AppCompatActivity() {
                 Toast.makeText(this,"click",Toast.LENGTH_LONG)
                         .apply { this.setGravity(Gravity.CENTER,0,0) }.show()
             },onLongClick = {
+                Toast.makeText(this,"long click",Toast.LENGTH_LONG)
+                        .apply { this.setGravity(Gravity.CENTER,0,0) }.show()
             }
             )
         }
-        fixGridLayout.setData(res,0)
+        fixGridLayout.setData(column = 3,row = 3, viewHolders = res,defaultPage = 0)
     }
 
 
@@ -40,22 +40,13 @@ class GridActivity : AppCompatActivity() {
     }
 
     private fun initView() {
-        fixGridLayout.initLayoutConfig(object : FixedGridLayout.IFixLayoutConfig(3,3) {
-            override fun getLayoutId(): Int = R.layout.item_layout_painting
-            override fun generateLayoutParam(context: Context): ViewGroup.MarginLayoutParams {
-                return FrameLayout.LayoutParams(293,473)
-                        .apply {
-                            setMargins(52,0,52,0)
-                        }
-            }
 
-        })
     }
 
 
     fun Float.dp2px(context: Context): Int {
         return TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, this,
+                TypedValue.COMPLEX_UNIT_DIP,this,
                 context.resources.displayMetrics
         ).toInt()
     }

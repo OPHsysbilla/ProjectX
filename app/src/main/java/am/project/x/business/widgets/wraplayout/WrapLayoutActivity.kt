@@ -80,7 +80,7 @@ class WrapLayoutActivity : BaseActivity(R.layout.activity_wraplayout), RadioGrou
                 mVContent?.switchToPage(a - 1)
             }
         }
-        val layoutMaster = LinearLayoutMaster(allowShowHalfVisibleCell = true)
+        val layoutMaster = LinearLayoutMaster(allowShowHalfVisibleCell = false)
         layoutMaster.debug = { it ->
             pager_index.setPageDecorateText(it)
         }
